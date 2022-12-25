@@ -1,0 +1,332 @@
+<sleigh version="3" bigendian="false" align="1" uniqbase="0x100">
+<sourcefiles>
+<sourcefile name="test.slaspec" index="0"/>
+</sourcefiles>
+<spaces defaultspace="ram">
+<space_other name="OTHER" index="1" bigendian="false" delay="0" size="8" physical="false"/>
+<space_unique name="unique" index="2" bigendian="false" delay="0" size="4" physical="true"/>
+<space name="ram" index="3" bigendian="false" delay="1" size="3" physical="true"/>
+<space name="register" index="4" bigendian="false" delay="0" size="1" physical="true"/>
+</spaces>
+<symbol_table scopesize="3" symbolsize="71">
+<scope id="0x0" parent="0x0"/>
+<scope id="0x1" parent="0x0"/>
+<scope id="0x2" parent="0x0"/>
+<subtable_sym_head name="instruction" id="0x0" scope="0x0"/>
+<start_sym_head name="inst_start" id="0x1" scope="0x0"/>
+<end_sym_head name="inst_next" id="0x2" scope="0x0"/>
+<next2_sym_head name="inst_next2" id="0x3" scope="0x0"/>
+<varnode_sym_head name="PC" id="0x4" scope="0x0"/>
+<varnode_sym_head name="INTB" id="0x5" scope="0x0"/>
+<varnode_sym_head name="INTBH" id="0x6" scope="0x0"/>
+<varnode_sym_head name="INTBL" id="0x7" scope="0x0"/>
+<varnode_sym_head name="R0" id="0x8" scope="0x0"/>
+<varnode_sym_head name="R2" id="0x9" scope="0x0"/>
+<varnode_sym_head name="R1" id="0xa" scope="0x0"/>
+<varnode_sym_head name="R3" id="0xb" scope="0x0"/>
+<varnode_sym_head name="A0" id="0xc" scope="0x0"/>
+<varnode_sym_head name="A1" id="0xd" scope="0x0"/>
+<varnode_sym_head name="FB" id="0xe" scope="0x0"/>
+<varnode_sym_head name="USP" id="0xf" scope="0x0"/>
+<varnode_sym_head name="ISP" id="0x10" scope="0x0"/>
+<varnode_sym_head name="SB" id="0x11" scope="0x0"/>
+<varnode_sym_head name="FLAG" id="0x12" scope="0x0"/>
+<varnode_sym_head name="SP" id="0x13" scope="0x0"/>
+<varnode_sym_head name="R2R0" id="0x14" scope="0x0"/>
+<varnode_sym_head name="R3R1" id="0x15" scope="0x0"/>
+<varnode_sym_head name="A1A0" id="0x16" scope="0x0"/>
+<varnode_sym_head name="R0H" id="0x17" scope="0x0"/>
+<varnode_sym_head name="R0L" id="0x18" scope="0x0"/>
+<varnode_sym_head name="R1H" id="0x19" scope="0x0"/>
+<varnode_sym_head name="R1L" id="0x1a" scope="0x0"/>
+<varnode_sym_head name="statusreg" id="0x1b" scope="0x0"/>
+<varnode_sym_head name="Cflg" id="0x1c" scope="0x0"/>
+<varnode_sym_head name="Dflg" id="0x1d" scope="0x0"/>
+<varnode_sym_head name="Zflg" id="0x1e" scope="0x0"/>
+<varnode_sym_head name="Sflg" id="0x1f" scope="0x0"/>
+<varnode_sym_head name="Bflg" id="0x20" scope="0x0"/>
+<varnode_sym_head name="Oflg" id="0x21" scope="0x0"/>
+<varnode_sym_head name="Iflg" id="0x22" scope="0x0"/>
+<varnode_sym_head name="Uflg" id="0x23" scope="0x0"/>
+<varnode_sym_head name="IPLflg" id="0x24" scope="0x0"/>
+<value_sym_head name="size0" id="0x25" scope="0x0"/>
+<value_sym_head name="op1_7" id="0x26" scope="0x0"/>
+<value_sym_head name="op0_7" id="0x27" scope="0x0"/>
+<value_sym_head name="destmode" id="0x28" scope="0x0"/>
+<varlist_sym_head name="dest8_11" id="0x29" scope="0x0"/>
+<value_sym_head name="dest8_11b" id="0x2a" scope="0x0"/>
+<value_sym_head name="op8_11" id="0x2b" scope="0x0"/>
+<value_sym_head name="imm8_11" id="0x2c" scope="0x0"/>
+<value_sym_head name="cnd8_11" id="0x2d" scope="0x0"/>
+<value_sym_head name="op12_15" id="0x2e" scope="0x0"/>
+<value_sym_head name="srcmode" id="0x2f" scope="0x0"/>
+<varlist_sym_head name="src12_15" id="0x30" scope="0x0"/>
+<value_sym_head name="src12_15b" id="0x31" scope="0x0"/>
+<value_sym_head name="imm12_15" id="0x32" scope="0x0"/>
+<value_sym_head name="op0_15" id="0x33" scope="0x0"/>
+<value_sym_head name="op8_15" id="0x34" scope="0x0"/>
+<value_sym_head name="bit15" id="0x35" scope="0x0"/>
+<value_sym_head name="flg12_14" id="0x36" scope="0x0"/>
+<value_sym_head name="ldc12_14" id="0x37" scope="0x0"/>
+<value_sym_head name="bit11" id="0x38" scope="0x0"/>
+<value_sym_head name="imm8_10" id="0x39" scope="0x0"/>
+<value_sym_head name="dest12_14" id="0x3a" scope="0x0"/>
+<value_sym_head name="dsp8" id="0x3b" scope="0x0"/>
+<value_sym_head name="imm8" id="0x3c" scope="0x0"/>
+<value_sym_head name="cnd8" id="0x3d" scope="0x0"/>
+<value_sym_head name="dsp16" id="0x3e" scope="0x0"/>
+<value_sym_head name="abs16" id="0x3f" scope="0x0"/>
+<value_sym_head name="imm16" id="0x40" scope="0x0"/>
+<value_sym_head name="abs20" id="0x41" scope="0x0"/>
+<value_sym_head name="dsp20" id="0x42" scope="0x0"/>
+<subtable_sym_head name="d_eab" id="0x43" scope="0x0"/>
+<operand_sym_head name="abs16" id="0x44" scope="0x1"/>
+<operand_sym_head name="dest8_11" id="0x45" scope="0x1"/>
+<operand_sym_head name="d_eab" id="0x46" scope="0x2"/>
+<subtable_sym name="instruction" id="0x0" scope="0x0" numct="1">
+<constructor parent="0x0" first="1" length="4" line="0:80">
+<oper id="0x46"/>
+<print piece="ROLC.b"/>
+<print piece=" "/>
+<opprint id="0"/>
+<construct_tpl>
+<null/><op_tpl code="BUILD"><null/>
+<varnode_tpl><const_tpl type="spaceid" name="const"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x4"/></varnode_tpl>
+</op_tpl>
+</construct_tpl>
+</constructor>
+<decision number="1" context="false" start="0" size="0">
+<pair id="0">
+<instruct_pat>
+<pat_block offset="0" nonzero="2">
+  <mask_word mask="0xffff0000" val="0x76af0000"/>
+</pat_block>
+</instruct_pat>
+</pair>
+</decision>
+</subtable_sym>
+<start_sym name="inst_start" id="0x1" scope="0x0"/>
+<end_sym name="inst_next" id="0x2" scope="0x0"/>
+<next2_sym name="inst_next2" id="0x3" scope="0x0"/>
+<varnode_sym name="PC" id="0x4" scope="0x0" space="register" offset="0x0" size="3">
+</varnode_sym>
+<varnode_sym name="INTB" id="0x5" scope="0x0" space="register" offset="0x6" size="3">
+</varnode_sym>
+<varnode_sym name="INTBH" id="0x6" scope="0x0" space="register" offset="0x5" size="2">
+</varnode_sym>
+<varnode_sym name="INTBL" id="0x7" scope="0x0" space="register" offset="0x7" size="2">
+</varnode_sym>
+<varnode_sym name="R0" id="0x8" scope="0x0" space="register" offset="0x8" size="2">
+</varnode_sym>
+<varnode_sym name="R2" id="0x9" scope="0x0" space="register" offset="0xa" size="2">
+</varnode_sym>
+<varnode_sym name="R1" id="0xa" scope="0x0" space="register" offset="0xc" size="2">
+</varnode_sym>
+<varnode_sym name="R3" id="0xb" scope="0x0" space="register" offset="0xe" size="2">
+</varnode_sym>
+<varnode_sym name="A0" id="0xc" scope="0x0" space="register" offset="0x10" size="2">
+</varnode_sym>
+<varnode_sym name="A1" id="0xd" scope="0x0" space="register" offset="0x12" size="2">
+</varnode_sym>
+<varnode_sym name="FB" id="0xe" scope="0x0" space="register" offset="0x14" size="2">
+</varnode_sym>
+<varnode_sym name="USP" id="0xf" scope="0x0" space="register" offset="0x16" size="2">
+</varnode_sym>
+<varnode_sym name="ISP" id="0x10" scope="0x0" space="register" offset="0x18" size="2">
+</varnode_sym>
+<varnode_sym name="SB" id="0x11" scope="0x0" space="register" offset="0x1a" size="2">
+</varnode_sym>
+<varnode_sym name="FLAG" id="0x12" scope="0x0" space="register" offset="0x1c" size="2">
+</varnode_sym>
+<varnode_sym name="SP" id="0x13" scope="0x0" space="register" offset="0x1e" size="2">
+</varnode_sym>
+<varnode_sym name="R2R0" id="0x14" scope="0x0" space="register" offset="0x8" size="4">
+</varnode_sym>
+<varnode_sym name="R3R1" id="0x15" scope="0x0" space="register" offset="0xc" size="4">
+</varnode_sym>
+<varnode_sym name="A1A0" id="0x16" scope="0x0" space="register" offset="0x10" size="4">
+</varnode_sym>
+<varnode_sym name="R0H" id="0x17" scope="0x0" space="register" offset="0x8" size="1">
+</varnode_sym>
+<varnode_sym name="R0L" id="0x18" scope="0x0" space="register" offset="0x9" size="1">
+</varnode_sym>
+<varnode_sym name="R1H" id="0x19" scope="0x0" space="register" offset="0xc" size="1">
+</varnode_sym>
+<varnode_sym name="R1L" id="0x1a" scope="0x0" space="register" offset="0xd" size="1">
+</varnode_sym>
+<varnode_sym name="statusreg" id="0x1b" scope="0x0" space="register" offset="0x30" size="4">
+</varnode_sym>
+<varnode_sym name="Cflg" id="0x1c" scope="0x0" space="register" offset="0x34" size="1">
+</varnode_sym>
+<varnode_sym name="Dflg" id="0x1d" scope="0x0" space="register" offset="0x35" size="1">
+</varnode_sym>
+<varnode_sym name="Zflg" id="0x1e" scope="0x0" space="register" offset="0x36" size="1">
+</varnode_sym>
+<varnode_sym name="Sflg" id="0x1f" scope="0x0" space="register" offset="0x37" size="1">
+</varnode_sym>
+<varnode_sym name="Bflg" id="0x20" scope="0x0" space="register" offset="0x38" size="1">
+</varnode_sym>
+<varnode_sym name="Oflg" id="0x21" scope="0x0" space="register" offset="0x39" size="1">
+</varnode_sym>
+<varnode_sym name="Iflg" id="0x22" scope="0x0" space="register" offset="0x3a" size="1">
+</varnode_sym>
+<varnode_sym name="Uflg" id="0x23" scope="0x0" space="register" offset="0x3b" size="1">
+</varnode_sym>
+<varnode_sym name="IPLflg" id="0x24" scope="0x0" space="register" offset="0x3c" size="1">
+</varnode_sym>
+<value_sym name="size0" id="0x25" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="0" bytestart="0" byteend="0" shift="0"/>
+</value_sym>
+<value_sym name="op1_7" id="0x26" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="1" bitend="7" bytestart="0" byteend="0" shift="1"/>
+</value_sym>
+<value_sym name="op0_7" id="0x27" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="7" bytestart="0" byteend="0" shift="0"/>
+</value_sym>
+<value_sym name="destmode" id="0x28" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="11" bytestart="1" byteend="1" shift="0"/>
+</value_sym>
+<varlist_sym name="dest8_11" id="0x29" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="11" bytestart="1" byteend="1" shift="0"/>
+<var id="0x8"/>
+<var id="0xa"/>
+<var id="0x9"/>
+<var id="0xb"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0x11"/>
+<var id="0xe"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0x11"/>
+<null/>
+</varlist_sym>
+<value_sym name="dest8_11b" id="0x2a" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="11" bytestart="1" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="op8_11" id="0x2b" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="11" bytestart="1" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="imm8_11" id="0x2c" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="11" bytestart="1" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="cnd8_11" id="0x2d" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="11" bytestart="1" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="op12_15" id="0x2e" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="15" bytestart="1" byteend="1" shift="4"/>
+</value_sym>
+<value_sym name="srcmode" id="0x2f" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="15" bytestart="1" byteend="1" shift="4"/>
+</value_sym>
+<varlist_sym name="src12_15" id="0x30" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="15" bytestart="1" byteend="1" shift="4"/>
+<var id="0x8"/>
+<var id="0xa"/>
+<var id="0x9"/>
+<var id="0xb"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0x11"/>
+<var id="0xe"/>
+<var id="0xc"/>
+<var id="0xd"/>
+<var id="0x11"/>
+<null/>
+</varlist_sym>
+<value_sym name="src12_15b" id="0x31" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="15" bytestart="1" byteend="1" shift="4"/>
+</value_sym>
+<value_sym name="imm12_15" id="0x32" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="15" bytestart="1" byteend="1" shift="4"/>
+</value_sym>
+<value_sym name="op0_15" id="0x33" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="15" bytestart="0" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="op8_15" id="0x34" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="15" bytestart="1" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="bit15" id="0x35" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="15" bitend="15" bytestart="1" byteend="1" shift="7"/>
+</value_sym>
+<value_sym name="flg12_14" id="0x36" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="14" bytestart="1" byteend="1" shift="4"/>
+</value_sym>
+<value_sym name="ldc12_14" id="0x37" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="14" bytestart="1" byteend="1" shift="4"/>
+</value_sym>
+<value_sym name="bit11" id="0x38" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="11" bitend="11" bytestart="1" byteend="1" shift="3"/>
+</value_sym>
+<value_sym name="imm8_10" id="0x39" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="8" bitend="10" bytestart="1" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="dest12_14" id="0x3a" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="12" bitend="14" bytestart="1" byteend="1" shift="4"/>
+</value_sym>
+<value_sym name="dsp8" id="0x3b" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="7" bytestart="0" byteend="0" shift="0"/>
+</value_sym>
+<value_sym name="imm8" id="0x3c" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="7" bytestart="0" byteend="0" shift="0"/>
+</value_sym>
+<value_sym name="cnd8" id="0x3d" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="7" bytestart="0" byteend="0" shift="0"/>
+</value_sym>
+<value_sym name="dsp16" id="0x3e" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="15" bytestart="0" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="abs16" id="0x3f" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="15" bytestart="0" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="imm16" id="0x40" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="15" bytestart="0" byteend="1" shift="0"/>
+</value_sym>
+<value_sym name="abs20" id="0x41" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="19" bytestart="0" byteend="2" shift="0"/>
+</value_sym>
+<value_sym name="dsp20" id="0x42" scope="0x0">
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="19" bytestart="0" byteend="2" shift="0"/>
+</value_sym>
+<subtable_sym name="d_eab" id="0x43" scope="0x0" numct="1">
+<constructor parent="0x43" first="1" length="4" line="0:78">
+<oper id="0x45"/>
+<oper id="0x44"/>
+<opprint id="1"/>
+<construct_tpl>
+<handle_tpl><const_tpl type="spaceid" name="ram"/><const_tpl type="real" val="0x0"/><const_tpl type="spaceid" name="unique"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x2"/><const_tpl type="spaceid" name="unique"/><const_tpl type="real" val="0x80"/></handle_tpl>
+<op_tpl code="COPY"><varnode_tpl><const_tpl type="spaceid" name="unique"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x2"/></varnode_tpl>
+<varnode_tpl><const_tpl type="handle" val="1" s="space"/><const_tpl type="handle" val="1" s="offset"/><const_tpl type="real" val="0x2"/></varnode_tpl>
+</op_tpl>
+</construct_tpl>
+</constructor>
+<decision number="1" context="false" start="0" size="0">
+<pair id="0">
+<instruct_pat>
+<pat_block offset="1" nonzero="1">
+  <mask_word mask="0xf000000" val="0xf000000"/>
+</pat_block>
+</instruct_pat>
+</pair>
+</decision>
+</subtable_sym>
+<operand_sym name="abs16" id="0x44" scope="0x1" off="2" base="-1" minlen="2" index="1">
+<operand_exp index="1" table="0x43" ct="0x0"/>
+<tokenfield bigendian="false" signbit="false" bitstart="0" bitend="15" bytestart="0" byteend="1" shift="0"/>
+</operand_sym>
+<operand_sym name="dest8_11" id="0x45" scope="0x1" subsym="0x29" off="0" base="-1" minlen="2" index="0">
+<operand_exp index="0" table="0x43" ct="0x0"/>
+</operand_sym>
+<operand_sym name="d_eab" id="0x46" scope="0x2" subsym="0x43" off="0" base="-1" minlen="4" index="0">
+<operand_exp index="0" table="0x0" ct="0x0"/>
+</operand_sym>
+</symbol_table>
+</sleigh>

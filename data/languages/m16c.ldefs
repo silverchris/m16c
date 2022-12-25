@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/language_definitions.rxg -->
+
+<language_definitions>
+   <language processor="m16c"
+            endian="little"
+            size="16"
+            variant="default"
+            version="1.0"
+            slafile="m16c.sla"
+            processorspec="m16c.pspec"
+            id="m16c:LE:16:default">
+    <description>Renesas M16C</description>
+    <compiler name="default" spec="m16c.cspec" id="default"/>
+  </language> 
+</language_definitions>

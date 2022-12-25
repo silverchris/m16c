@@ -1,0 +1,83 @@
+define endian=little;
+
+define alignment=1;
+
+define space ram type=ram_space size=3 default;
+define space register type=register_space size=1;
+
+define register offset=0x00 size=3 [ PC _ INTB ];
+define register offset=0x05 size=2 [ INTBH INTBL];
+
+define register offset=0x08 size=2 [ R0 R2 R1 R3 A0 A1 FB USP ISP SB FLAG SP];
+define register offset=0x08 size=4 [ R2R0 R3R1 A1A0];
+define register offset=0x08 size=1 [ R0H R0L _ _ R1H R1L _ _ ];
+
+define register offset=0x30 size=4 [statusreg];
+define register offset=0x34 size=1 [Cflg Dflg Zflg Sflg Bflg Oflg Iflg Uflg IPLflg];
+
+define token operand_g (16)
+	size0     = ( 0, 0)
+	op1_7     = ( 1, 7)
+	op0_7     = ( 0, 7)
+	destmode  = ( 8,11)
+	dest8_11  = ( 8,11)
+	dest8_11b = ( 8,11)
+	op8_11    = ( 8,11)
+	imm8_11   = ( 8,11)
+	cnd8_11   = ( 8,11)
+	op12_15   = (12,15)
+	srcmode   = (12,15)
+	src12_15  = (12,15)
+	src12_15b = (12,15)
+	imm12_15  = (12,15)
+	op0_15    = ( 0,15)
+	op8_15    = ( 8,15)
+	bit15     = (15,15)
+	flg12_14  = (12,14)
+	ldc12_14  = (12,14)
+	bit11     = (11,11)
+	imm8_10   = ( 8,10)
+	dest12_14 = (12,14)
+;
+
+define token data8 (8)
+	dsp8 = (0,7)
+	imm8 = (0,7)
+	cnd8 = (0,7)
+;
+
+define token data16 (16)
+	dsp16 = (0,15)
+	abs16 = (0,15)
+	imm16 = (0,15)
+;
+
+define token data32 (32)
+	abs20 = (0,19)
+	dsp20 = (0,19)
+;
+
+
+attach variables [dest8_11 src12_15] [R0 R1 R2 R3 A0 A1 A0 A1 A0 A1 SB FB A0 A1 SB _ ];
+
+#d_eab: dest8_11              is dest8_11 & dest8_11=0           { export dest8_11; }
+#d_eab: dest8_11              is dest8_11 & dest8_11=1          {export dest8_11; }
+#d_eab: dest8_11              is dest8_11  & dest8_11=2           {export dest8_11; }
+#d_eab: dest8_11              is dest8_11  & dest8_11=3           { export dest8_11;  }
+#d_eab: dest8_11         is dest8_11 & dest8_11=4         { local temp = dest8_11:1; export temp; }
+#d_eab: dest8_11         is dest8_11 & dest8_11=5         { local temp = dest8_11:1; export temp; }
+#d_eab: dest8_11         is dest8_11 & dest8_11=6         { local temp = dest8_11; export *temp; }
+#d_eab: dest8_11         is dest8_11 & dest8_11=7         { local temp = dest8_11; export *temp; }
+#d_eab: dest8_11   is dest8_11 & dest8_11=8; dsp8   { local temp = (dest8_11 + dsp8); export *temp;}
+#d_eab: dest8_11[dsp8]   is dest8_11 & dest8_11=9; dsp8   { local temp = (dest8_11 + dsp8); export *temp; }
+#d_eab: dest8_11[dsp8]   is dest8_11 & dest8_11=10; dsp8  { local temp = (dest8_11 + dsp8); export *temp; }
+#d_eab: dest8_11[dsp8]   is dest8_11 & dest8_11=11 ; dsp8 { local temp = (dest8_11 + dsp8); export *temp; }
+#d_eab: dest8_11[dsp16]  is dest8_11 & dest8_11=12; dsp16 { local temp = (dest8_11 + dsp16); export *temp; }
+#d_eab: dest8_11[dsp16]  is dest8_11 & dest8_11=13; dsp16 { local temp = (dest8_11 + dsp16); export *temp; }
+#d_eab: dest8_11[dsp16]  is dest8_11 & dest8_11=14; dsp16 { local temp = (dest8_11 + dsp16); export *temp; }
+d_eab: abs16            is dest8_11 & dest8_11=15; abs16            {local temp = (abs16:2); export *temp; }
+
+:ROLC.b d_eab          is (op1_7=0x3B & size0=0 & op12_15=0x0A) ... & d_eab    {
+}
+
+
