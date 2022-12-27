@@ -6,7 +6,7 @@
 		<machine_alignment value="2" />
 		<default_alignment value="2" />
 		<default_pointer_alignment value="2" />
-		<pointer_size value="4" />
+		<pointer_size value="3" />
 		<wchar_size value="2" />
 		<short_size value="2" />
 		<integer_size value="2" />
@@ -20,9 +20,9 @@
 		<range space="ram" />
 	</global>
 	<stackpointer register="SP" space="ram" growth="negative" />
-	<!-- <returnaddress>
-		<varnode space="stack" offset="0" size="3" />
-	</returnaddress> -->
+	<returnaddress>
+		<varnode space="stack" offset="-3" size="3" />
+	</returnaddress>
 	<default_proto>
 		<!-- <prototype name="stdcall" extrapop="3" stackshift="3" strategy="register"> -->
 		<prototype name="__stdcall" extrapop="3" stackshift="3">
@@ -55,10 +55,11 @@
 				<register name="SP" />
 				<register name="INTB" />
 				<register name="SB" />
+				<varnode space="stack" offset="0" size="3"/>
 			</unaffected>
-			<localrange>
-				<range space="stack" first="0x00" last="0xff"/>
-			</localrange>
+			<!-- <localrange>
+				<range space="stack" first="0xffff00" last="0xffffff"/>
+			</localrange> -->
 		</prototype>
 	</default_proto>
 	<prototype name="__stackcall" extrapop="3" stackshift="3">
