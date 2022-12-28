@@ -6,7 +6,7 @@
 		<machine_alignment value="2" />
 		<default_alignment value="2" />
 		<default_pointer_alignment value="2" />
-		<pointer_size value="3" />
+		<pointer_size value="4" />
 		<wchar_size value="2" />
 		<short_size value="2" />
 		<integer_size value="2" />
