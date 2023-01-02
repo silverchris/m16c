@@ -62,7 +62,7 @@
 			</localrange> -->
 		</prototype>
 	</default_proto>
-	<prototype name="__stackcall" extrapop="3" stackshift="3">
+	<prototype name="__stackcall" extrapop="3" stackshift="0">
 		<input>
 			<pentry minsize="1" maxsize="500" align="1">
 				<addr offset="3" space="stack" />
