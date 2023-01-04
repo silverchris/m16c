@@ -3,8 +3,8 @@
 <compiler_spec>
 	<data_organization>
 		<absolute_max_alignment value="0" />
-		<machine_alignment value="2" />
-		<default_alignment value="2" />
+		<machine_alignment value="0" />
+		<default_alignment value="0" />
 		<default_pointer_alignment value="2" />
 		<pointer_size value="4" />
 		<wchar_size value="2" />
@@ -16,6 +16,7 @@
 		<double_size value="8" />
 		<long_double_size value="12" />
 	</data_organization>
+	<spacebase name="FrameBase" register="FB" space="ram"/>
 	<global>
 		<range space="ram" />
 	</global>
@@ -56,6 +57,7 @@
 				<register name="INTB" />
 				<register name="SB" />
 				<varnode space="stack" offset="0" size="3"/>
+				<register name="FB" />
 			</unaffected>
 			<!-- <localrange>
 				<range space="stack" first="0xffff00" last="0xffffff"/>
@@ -86,6 +88,7 @@
 			<register name="SP" />
 			<register name="INTB" />
 			<register name="SB" />
+			<register name="FB" />
 		</unaffected>
 	</prototype>
 </compiler_spec>
