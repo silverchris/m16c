@@ -16,11 +16,12 @@
 		<double_size value="8" />
 		<long_double_size value="12" />
 	</data_organization>
-	<spacebase name="FrameBase" register="FB" space="ram"/>
+	<spacebase name="FrameBase" register="FB" space="near"/>
 	<global>
 		<range space="ram" />
+		<range space="near"/>
 	</global>
-	<stackpointer register="SP" space="ram" growth="negative" />
+	<stackpointer register="SP" space="near" growth="negative" />
 	<returnaddress>
 		<varnode space="stack" offset="-3" size="3" />
 	</returnaddress>

@@ -4,6 +4,16 @@
 
 <processor_spec>
   <programcounter register="PC"/>
+  <segmentop space="ram" userop="segment" farpointer="yes">
+    <pcode>
+      <input name="seg" size="1"/>
+      <input name="addr" size="2"/>
+      <output name="res" size="3"/>
+      <body><![CDATA[
+        res = (zext(seg & 0xf:1) << 16) + zext(addr);
+      ]]></body>
+    </pcode>
+  </segmentop>
   <!-- <data_space space="ram" ptr_wordsize="3"/> -->
   <default_symbols>
   <symbol name="VECTOR_UNDEFINEDINST" address="FFFDC" entry="true" type="code_ptr"/>
@@ -17,7 +27,7 @@
   <symbol name="VECTOR_RESET"         address="FFFFC" entry="true" type="code_ptr"/>
   </default_symbols>
   <default_memory_blocks>
-    <memory_block name="SFR" start_address="ram:0x00" length="0x400" initialized="false"/>
-    <memory_block name="iram" start_address="ram:0x400" length="0xFC00" initialized="false" mode="rw"/>
+    <memory_block name="SFR" start_address="near:0x00" length="0x400" initialized="false"/>
+    <memory_block name="iram" start_address="near:0x400" length="0xFC00" initialized="false" mode="rw"/>
   </default_memory_blocks>  
 </processor_spec>
