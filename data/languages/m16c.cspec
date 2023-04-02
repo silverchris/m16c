@@ -22,9 +22,6 @@
 		<range space="near"/>
 	</global>
 	<stackpointer register="SP" space="near" growth="negative" />
-	<returnaddress>
-		<varnode space="stack" offset="-3" size="3" />
-	</returnaddress>
 	<default_proto>
 		<!-- <prototype name="stdcall" extrapop="3" stackshift="3" strategy="register"> -->
 		<prototype name="__stdcall" extrapop="3" stackshift="3">
@@ -63,6 +60,9 @@
 			<!-- <localrange>
 				<range space="stack" first="0xffff00" last="0xffffff"/>
 			</localrange> -->
+			<returnaddress>
+				<varnode space="stack" offset="-3" size="3" />
+			</returnaddress>
 		</prototype>
 	</default_proto>
 	<prototype name="__stackcall" extrapop="3" stackshift="0">
@@ -91,5 +91,71 @@
 			<register name="SB" />
 			<register name="FB" />
 		</unaffected>
+		<returnaddress>
+			<varnode space="stack" offset="-3" size="3" />
+		</returnaddress>
 	</prototype>
+	<prototype name="__syscall" extrapop="0" stackshift="0" strategy="register">
+	<input>
+			<pentry minsize="2" maxsize="2">
+				<register name="R0" />
+			</pentry>
+			<pentry minsize="2" maxsize="2">
+				<register name="R1" />
+			</pentry>
+			<pentry minsize="2" maxsize="2">
+				<register name="A0" />
+			</pentry>
+			<pentry minsize="2" maxsize="2">
+				<register name="A1" />
+			</pentry>
+			<pentry minsize="4" maxsize="4">
+				<register name="R3R1" />
+			</pentry>
+			<pentry minsize="4" maxsize="4">
+				<register name="R2R0" />
+			</pentry>
+	</input>
+	<output>
+		<pentry minsize="2" maxsize="2">
+			<register name="R0" />
+		</pentry>
+		<!-- <pentry minsize="4" maxsize="4">
+			<register name="R2R0" />
+		</pentry> -->
+		<!-- <pentry minsize="" maxsize="4">
+				<register name="R3R2R1R0" />
+			</pentry>	-->
+	</output>
+	<unaffected>
+		<register name="SP" />
+		<register name="INTB" />
+		<register name="SB" />
+		<register name="FB" />
+	</unaffected>
+	<killedbycall>
+		<register name="R0"/>
+	</killedbycall>
+		<returnaddress>
+			<varnode space="stack" offset="-3" size="3" />
+		</returnaddress>
+</prototype>
+	<prototype name="task" extrapop="3" stackshift="3">
+			<input>
+				<pentry minsize="1" maxsize="2">
+					<register name="R1" />
+				</pentry>
+			</input>
+			<output>
+				<pentry minsize="1" maxsize="1">
+					<register name="R0L" />
+				</pentry>
+			</output>
+			<unaffected>
+				<register name="SP" />
+				<register name="INTB" />
+				<register name="SB" />
+				<register name="FB" />
+			</unaffected>
+		</prototype>
 </compiler_spec>
