@@ -16,12 +16,11 @@
 		<double_size value="8" />
 		<long_double_size value="12" />
 	</data_organization>
-	<spacebase name="FrameBase" register="FB" space="near"/>
+	<spacebase name="FrameBase" register="FB" space="ram"/>
 	<global>
 		<range space="ram" />
-		<range space="near"/>
 	</global>
-	<stackpointer register="SP" space="near" growth="negative" />
+	<stackpointer register="SP" space="ram" growth="negative" />
 	<default_proto>
 		<!-- <prototype name="stdcall" extrapop="3" stackshift="3" strategy="register"> -->
 		<prototype name="__stdcall" extrapop="3" stackshift="3">
