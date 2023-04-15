@@ -1,0 +1,16 @@
+# Eclipse Ghidra Build Files
+.antProperties.xml
+.classpath
+.project
+.settings/
+Module.manifest
+bin/
+build.gradle
+extension.properties
+ghidra_scripts/
+lib/
+os/
+src/
+
+# Vim tags file
+tags
