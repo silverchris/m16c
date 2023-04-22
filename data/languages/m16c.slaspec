@@ -631,15 +631,35 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 #}
 
 :BM^COND8 dsp8, dest8_11           is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11 = 0 | dest8_11=1 | dest8_11=2 |dest8_11 =3 |dest8_11=4 |dest8_11=5);dsp8; COND8 {
-	macro_bm(COND8:1, dsp8:1, dest8_11);
+	# NOt sure why the macro doesn't work here?
+	if (COND8 == 1) goto <true>;
+	dest8_11 = dest8_11 & ~(1 << zext(dsp8:1));
+	goto <end>;
+	<true>
+	dest8_11 = dest8_11 | (1 << zext(dsp8:1));
+	<end>
 }
 
 :BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11=6 | dest8_11=7); COND8 [addr=dest8_11/8; bit=dest8_11-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *:1 addr:4);
+	local tmp:4 = addr;
+	# NOt sure why the macro doesn't work here?
+	if (COND8 == 1) goto <true>;
+	*:1 tmp = *:1 tmp & ~(1 << zext(bit:1));
+	goto <end>;
+	<true>
+	*:1 tmp = *:1 tmp | (1 << zext(bit:1));
+	<end>
 }
 
 :BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11=8 | dest8_11=9 | dest8_11=10); dsp8; COND8 [addr=(dest8_11+dsp8)/8; bit=(dest8_11+dsp8)-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *:1 addr:4);
+	local tmp:4 = addr;
+	# NOt sure why the macro doesn't work here?
+	if (COND8 == 1) goto <true>;
+	*:1 tmp = *:1 tmp & ~(1 << zext(bit:1));
+	goto <end>;
+	<true>
+	*:1 tmp = *:1 tmp | (1 << zext(bit:1));
+	<end>
 }
 
 :BM^COND8  bit, addr[FB]              is FB & op0_7=0x7E & op12_15=0x2 & dest8_11=11; dsp8; COND8 [addr=((8+dsp8)/8)-1; bit=(addr*8)-dsp8;]{
@@ -654,11 +674,25 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 }
 
 :BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11=12 | dest8_11=13 | dest8_11=14); dsp16; COND8 [addr=(dest8_11+dsp16)/8; bit=(dest8_11+dsp16)-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *:1 addr:4);
+	local tmp:4 = addr;
+	# NOt sure why the macro doesn't work here?
+	if (COND8 == 1) goto <true>;
+	*:1 tmp = *:1 tmp & ~(1 << zext(bit:1));
+	goto <end>;
+	<true>
+	*:1 tmp = *:1 tmp | (1 << zext(bit:1));
+	<end>
 }
 
 :BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11=15; abs16; COND8 [addr=abs16/8; bit=abs16-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *:1 addr:4);
+	local tmp:4 = addr;
+	# NOt sure why the macro doesn't work here?
+	if (COND8 == 1) goto <true>;
+	*:1 tmp = *:1 tmp & ~(1 << zext(bit:1));
+	goto <end>;
+	<true>
+	*:1 tmp = *:1 tmp | (1 << zext(bit:1));
+	<end>
 }
 
 ##:BM^COND4 "C"          is (op1_7=0x3E & size0=1 &op12_15=0xD) ... & COND4 {
@@ -1458,29 +1492,29 @@ MOVA_ADDRESS: abs16            is dest8_11 & dest8_11=15; abs16 { local addr:2 =
 }
 
 :MOVLL R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x00) ... & d_eab {
-	d_eab = (d_eab & 0xF)|(R0L & 0xF);
+	d_eab = (d_eab & 0xF0)|(R0L & 0xF);
 }
 :MOVLH R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x02) ... & d_eab {
-	d_eab = (d_eab &0xF0)|(R0L << 4);
+	d_eab = (d_eab &0xF)|(R0L << 4);
 }
 :MOVHL R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x01) ... & d_eab {
 	d_eab = (d_eab & 0xF0)|(R0L >> 4);
 }
 :MOVHH R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x03) ... & d_eab {
-	d_eab = (d_eab & 0xF0)|(R0L & 0xF0);
+	d_eab = (d_eab & 0xF)|(R0L & 0xF0);
 }
 
 :MOVLL d_eab, R0L                  is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x00) ... & d_eab {
-	R0L = (R0L & 0xF)|(d_eab & 0xF);
+	R0L = (R0L & 0xF0)|(d_eab & 0xF);
 }
 :MOVLH d_eab, R0L                  is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x02) ... & d_eab {
-	R0L = (R0L  &0xF0)|(d_eab  << 4);
+	R0L = (R0L  &0xF)|(d_eab  << 4);
 }
 :MOVHL d_eab, R0L                  is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x01) ... & d_eab {
 	R0L = (R0L & 0xF0)|(d_eab  >> 4);
 }
 :MOVHH d_eab, R0L                 is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x03) ... & d_eab {
-	R0L = (R0L & 0xF0)|(d_eab  & 0xF0);
+	R0L = (R0L & 0xF)|(d_eab  & 0xF0);
 }
 
 #:MUL.b imm8, d_eab     is (op1_7=0x3E & size0=0 & op12_15=0x05) ... & d_eab; imm8 {
@@ -1580,7 +1614,10 @@ MOVA_ADDRESS: abs16            is dest8_11 & dest8_11=15; abs16 { local addr:2 =
 }
 
 :OR.b u8, d_eab                  is (op1_7=0x3B & size0=0 & op12_15=0x03) ... & d_eab; u8 {
-	macro_or(u8, d_eab);
+	local tmp = d_eab | u8;
+	$(S) = (tmp s< 0);
+	$(Z) = (tmp == 0);
+	d_eab = tmp;
 }
 
 :OR.w u16, d_eaw                 is (op1_7=0x3B & size0=1 & op12_15=0x03) ... & d_eaw; u16 {
@@ -1596,7 +1633,10 @@ MOVA_ADDRESS: abs16            is dest8_11 & dest8_11=15; abs16 { local addr:2 =
 }
 
 :OR.b s_eab1, d_eab1               is op1_7=0x4C & size0=0 & $(SRCDEST8) {
-	macro_or(s_eab1, d_eab1);
+	local tmp = d_eab1 | s_eab1;
+	$(S) = (tmp s< 0);
+	$(Z) = (tmp == 0);
+	d_eab1 = tmp;
 }
 
 :OR.w s_eaw1, d_eaw1               is op1_7=0x4C & size0=1 & $(SRCDEST16) {
