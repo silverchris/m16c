@@ -14,3 +14,7 @@ src/
 
 # Vim tags file
 tags
+
+
+# Sleigh output
+*.sla

@@ -1,6 +1,13 @@
-Ghidra Processor Module for Renesas M16C Architecture
+# Ghidra Processor Module for Renesas M16C Architecture
 
-## Build Instructions
+## Install instructions
+
+Clone this repo into `<ghidra_home>/Ghidra/Extensions/` folder
+(don't confuse with `<ghidra_home>/Extensions/`).
+
+That's it, just run Ghidra and select `m16c` language.
+
+## Development Instructions
 
 Install Eclipse, set up a development environment following [this guide](https://github.com/NationalSecurityAgency/ghidra/blob/master/DevGuide.md).
 

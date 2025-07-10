@@ -39,12 +39,14 @@ define token operand_g (16)
 	ldc12_14     = (12,14)
 	imm8_10      = ( 8,10)
 	dest12_14    = (12,14)
+	dest_SHAL_12 = (12,12)
 	src32_8_11   = ( 8,11)
 	mul8_11      = ( 8,11)
 	mul8b8_11    = ( 8,11)
 	srcb12_13    = (12,13)
 	srcw12_13    = (12,13)
 	dir          = (12,13)
+	op13_15      = (13,15)
 	bit8         = (8,8)
 	bit9         = (9,9)
 	bit10        = (10,10)
@@ -72,12 +74,15 @@ define token operand_s (8)
 ;
 
 define token data8 (8)
-	dsp8       = (0,7) signed
-	imm8       = (0,7)
-	cnd8       = (0,7)
-	interrupt  = (0,5)
-	data8_bit6 = (6,6)
-	data8_bit7 = (7,7)
+	dsp8         = (0,7) signed
+	imm8         = (0,7)
+	cnd8         = (0,7)
+	interrupt    = (0,5)
+	data8_bits47 = (4,7)
+	data8_bit6   = (6,6)
+	data8_bit7   = (7,7)
+	bitNo8       = (0,2)
+	bitBase8     = (3,7)
 ;
 
 define token dest_data8 (8)
@@ -90,6 +95,8 @@ define token data16 (16)
 	dsp16 = (0,15) signed
 	abs16 = (0,15)
 	imm16 = (0,15)
+	bitNo16 = (0,2)
+	bitBase16 = (3,15)
 ;
 
 define token dest_data16 (16)
@@ -113,32 +120,32 @@ define context contextreg
 	guard    = (0, 0)
 	destmode = (1, 4)
 	srcmode  = (5, 8)
-	addrmode = (9,12) ;
-	
+	addrmode = (9,12)
+;
+
+# some magic, see details in .pspec file
 define pcodeop segment;
 
 
 attach variables [dest8_11 src12_15] [R0 R1 R2 R3 A0 A1 A0 A1 A0 A1 SB _ A0 A1 SB _ ];
-attach variables [mul8_11] [R2R0 R3R1 _ _ A1A0 _ _ _ _ _ _ _ _ _ _ _];
+attach variables [src32_8_11 mul8_11] [R2R0 R3R1 _ _ A1A0 _ _ _ _ _ _ _ _ _ _ _];
 attach variables [mul8b8_11] [R0L R0H R1L R1H _ _ _ _ _ _ _ _ _ _ _ _];
 attach variables [dest2_2] [R0L R0H];
 attach variables [dest3_r0l_r0h] [R0L R0H];
 attach variables [dest2_a0_a1 dest_a0_a1] [A0 A1];
-#attach variables [dest_a0_a1] [A0 A1];
 attach variables [flg12_14] [Cflg Dflg Zflg Sflg Bflg Oflg Iflg Uflg];
 attach variables [dest12_14] [R0 R1 R2 R3 A0 A1 _ _];
+attach variables [dest_SHAL_12] [R2R0 R3R1];
 
 attach values [imm8_11 imm12_15] [0 1 2 3 4 5 6 7 -8 -7 -6 -5 -4 -3 -2 -1];
 attach values [shl_imm8_11 sha_imm12_15] [1 2 3 4 5 6 7 8 -1 -2 -3 -4 -5 -6 -7 -8];
 
-attach variables [src32_8_11] [R2R0 R3R1 _ _ A1A0 _ _ _ _ _ _ _ _ _ _ _];
-
-
-attach variables [ldc12_14] [_ INTBL INTBH FLAG ISP USP SB _];
+attach variables [ldc12_14] [_ INTBL INTBH FLAG ISP USP SB FB];
 
 attach variables [srcb12_13] [R0L R0H R1L R1H];
 attach variables [srcw12_13] [R0 R1 R2 R3];
 
+# destination types 8..15; used by d_eaw1 and d_eab1
 d_addr: dsp8[A0]   is A0 & destmode=8; dsp8   { local temp:2 = A0 + dsp8; export temp; }
 d_addr: dsp8[A1]   is A1 & destmode=9; dsp8   { local temp:2 = A1 + dsp8; export temp; }
 d_addr: dsp8[SB]   is SB & destmode=10; dsp8  { local temp:2 = SB + dsp8; export temp; } 
@@ -148,6 +155,7 @@ d_addr: dsp16[A1]  is A1 & destmode=13; dsp16 { local temp:2 = A1 + dsp16; expor
 d_addr: dsp16[SB]  is SB & destmode=14; dsp16 { local temp:2 = SB + dsp16; export temp; } 
 d_addr: abs16      is destmode=15; abs16      { local temp:2 = abs16; export temp; }
 
+# source types 8..15; used by s_eaw1 and s_eab1
 s_addr: dsp8[A0]   is A0 & srcmode=8; dsp8   { local temp:2 = A0 + dsp8; export temp; }
 s_addr: dsp8[A1]   is A1 & srcmode=9; dsp8   { local temp:2 = A1 + dsp8; export temp; }
 s_addr: dsp8[SB]   is SB & srcmode=10; dsp8  { local temp:2 = SB + dsp8; export temp; } 
@@ -157,122 +165,83 @@ s_addr: dsp16[A1]  is A1 & srcmode=13; dsp16 { local temp:2 = A1 + dsp16; export
 s_addr: dsp16[SB]  is SB & srcmode=14; dsp16 { local temp:2 = SB + dsp16; export temp; } 
 s_addr: abs16      is srcmode=15; abs16      { local temp:2 = abs16; export temp; }
 
-#d_eal1: R2R0      is R2R0 & destmode=0       { export R2R0; }
-#d_eal1: R3R1      is R3R1 & destmode=1       { export R3R1; }
-#d_eal1: A1A0      is A1A0 & destmode=4       { export A1A0; }
-#d_eal1: [A0]      is A0 & destmode=6         { export *:4 A0; }
-#d_eal1: [A1]      is A1 & destmode=7         { export *:4 A1; }
-#d_eal1: d_addr    is d_addr                  { local temp = d_addr; export *:4 temp; }
-d_eaw1: R0        is R0 & destmode=0         { export R0; }
-d_eaw1: R1        is R1 & destmode=1         { export R1; }
-d_eaw1: R2        is R2 & destmode=2         { export R2; }
-d_eaw1: R3        is R3 & destmode=3         { export R3; }
-d_eaw1: A0        is A0 & destmode=4         { export A0; }
-d_eaw1: A1        is A1 & destmode=5         { export A1; }
-d_eaw1: [A0]      is A0 & destmode=6         { export *[near]:2 A0; }
-d_eaw1: [A1]      is A1 & destmode=7         { export *[near]:2 A1; }
-d_eaw1: d_addr    is d_addr                  { local temp = d_addr; export *[near]:2 temp; }
+# universal destination, dword size
+d_eal1: R2R0      is R2R0 & destmode=0       { export R2R0; }
+d_eal1: R3R1      is R3R1 & destmode=1       { export R3R1; }
+d_eal1: A1A0      is A1A0 & destmode=4       { export A1A0; }
+d_eal1: [A0]      is A0 & destmode=6         { export *:4 A0; }
+d_eal1: [A1]      is A1 & destmode=7         { export *:4 A1; }
+d_eal1: d_addr    is d_addr                  { local temp = d_addr; export *[near]:4 temp; }
 
-d_eab1: R0L                  is destmode=0 & R0L                   { export R0L; }
-d_eab1: R0H                  is destmode=1 & R0H                   { export R0H; }
-d_eab1: R1L                  is destmode=2 & R1L                   { export R1L; }
-d_eab1: R1H                  is destmode=3 & R1H                   { export R1H; }
-d_eab1: A0                   is A0 & destmode=4                    { local temp = (A0:1); export temp; }
-d_eab1: A1                   is A1 & destmode=5                    { local temp = (A1:1); export temp; }
-d_eab1: [A0]                 is A0 & destmode=6                    { local temp = A0; export *[near]:1 temp; }
-d_eab1: [A1]                 is A1 & destmode=7                    { local temp = A1; export *[near]:1 temp; }
-d_eab1: d_addr               is  d_addr                             { local temp = d_addr; export *[near]:1 temp; }
+# universal destination, word size
+d_eaw1: R0         is R0 & destmode=0        { export R0; }
+d_eaw1: R1         is R1 & destmode=1        { export R1; }
+d_eaw1: R2         is R2 & destmode=2        { export R2; }
+d_eaw1: R3         is R3 & destmode=3        { export R3; }
+d_eaw1: A0         is A0 & destmode=4        { export A0; }
+d_eaw1: A1         is A1 & destmode=5        { export A1; }
+d_eaw1: [A0]       is A0 & destmode=6        { export *[near]:2 A0; }
+d_eaw1: [A1]       is A1 & destmode=7        { export *[near]:2 A1; }
+d_eaw1: d_addr     is d_addr                 { local temp = d_addr; export *[near]:2 temp; }
 
-s_eaw1: R0      is R0 & srcmode=0 { export R0; }
-s_eaw1: R1      is R1 & srcmode=1 { export R1; }
-s_eaw1: R2      is R2 & srcmode=2 { export R2; }
-s_eaw1: R3      is R3 & srcmode=3 { export R3; }
-s_eaw1: A0      is A0 & srcmode=4 { export A0; }
-s_eaw1: A1      is A1 & srcmode=5 { export A1; }
-s_eaw1: [A0]    is A0 & srcmode=6 { export *[near]:2 A0; }
-s_eaw1: [A1]    is A1 & srcmode=7 { export *[near]:2 A1; }
-s_eaw1: s_addr  is s_addr         { local temp = s_addr; export *[near]:2 temp; }
+# universal destination, byte size
+d_eab1: R0L        is destmode=0 & R0L       { export R0L; }
+d_eab1: R0H        is destmode=1 & R0H       { export R0H; }
+d_eab1: R1L        is destmode=2 & R1L       { export R1L; }
+d_eab1: R1H        is destmode=3 & R1H       { export R1H; }
+d_eab1: A0         is A0 & destmode=4        { local temp = (A0:1); export temp; }
+d_eab1: A1         is A1 & destmode=5        { local temp = (A1:1); export temp; }
+d_eab1: [A0]       is A0 & destmode=6        { local temp = A0; export *[near]:1 temp; }
+d_eab1: [A1]       is A1 & destmode=7        { local temp = A1; export *[near]:1 temp; }
+d_eab1: d_addr     is d_addr                 { local temp = d_addr; export *[near]:1 temp; }
 
-s_eab1: R0L             is srcmode=0 & R0L               { export R0L; }
-s_eab1: R0H             is srcmode=1 & R0H               { export R0H; }
-s_eab1: R1L             is srcmode=2 & R1L               { export R1L; }
-s_eab1: R1H             is srcmode=3 & R1H               { export R1H; }
-s_eab1: A0              is A0 & srcmode=4                { local temp = (A0:1); export temp; }
-s_eab1: A1              is A1 & srcmode=5                { local temp = (A1:1); export temp; }
-s_eab1: [A0]            is A0 & srcmode=6                { local temp = A0; export *[near]:1 temp; }
-s_eab1: [A1]            is A1 & srcmode=7                { local temp = A1; export *[near]:1 temp; }
-s_eab1: s_addr          is s_addr                        { local temp = s_addr; export *[near]:1 temp; }
+# universal source, word size
+s_eaw1: R0         is R0 & srcmode=0         { export R0; }
+s_eaw1: R1         is R1 & srcmode=1         { export R1; }
+s_eaw1: R2         is R2 & srcmode=2         { export R2; }
+s_eaw1: R3         is R3 & srcmode=3         { export R3; }
+s_eaw1: A0         is A0 & srcmode=4         { export A0; }
+s_eaw1: A1         is A1 & srcmode=5         { export A1; }
+s_eaw1: [A0]       is A0 & srcmode=6         { export *[near]:2 A0; }
+s_eaw1: [A1]       is A1 & srcmode=7         { export *[near]:2 A1; }
+s_eaw1: s_addr     is s_addr                 { local temp = s_addr; export *[near]:2 temp; }
 
-d_eaw: R0         is R0 & dest8_11=0         { export R0; }
-d_eaw: R1         is R1 & dest8_11=1         { export R1; }
-d_eaw: R2         is R2 & dest8_11=2         { export R2; }
-d_eaw: R3         is R3 & dest8_11=3         { export R3; }
-d_eaw: A0         is A0 & dest8_11=4         { export A0; }
-d_eaw: A1         is A1 & dest8_11=5         { export A1; }
-d_eaw: [A0]       is A0 & dest8_11=6         { export *[near]:2 A0; }
-d_eaw: [A1]       is A1 & dest8_11=7         { export *[near]:2 A1; }
-d_eaw: dsp8[A0]   is A0 & dest8_11=8; dsp8   { local temp:2 = A0 + dsp8; export *[near]:2 temp; }
-d_eaw: dsp8[A1]   is A1 & dest8_11=9; dsp8   { local temp:2 = A1 + dsp8; export *[near]:2 temp; } 
-d_eaw: dsp8[SB]   is SB & dest8_11=10; dsp8  { local temp:2 = SB + dsp8; export *[near]:2 temp; } 
-d_eaw: dsp8[FB]   is FB & dest8_11=11 ; dsp8 { local temp:2 = FB+sext(dsp8:1); export *[near]:2 temp; } 
-d_eaw: dsp16[A0]  is A0 & dest8_11=12; dsp16 { local temp:2 = A0 + dsp16; export *[near]:2 temp; } 
-d_eaw: dsp16[A1]  is A1 & dest8_11=13; dsp16 { local temp:2 = A1 + dsp16; export *[near]:2 temp; } 
-d_eaw: dsp16[SB]  is SB & dest8_11=14; dsp16 { local temp:2 = SB + dsp16; export *[near]:2 temp; } 
-d_eaw: abs16      is dest8_11=15; abs16      { export *[near]:2 abs16; }
+# universal source, byte size
+s_eab1: R0L        is srcmode=0 & R0L        { export R0L; }
+s_eab1: R0H        is srcmode=1 & R0H        { export R0H; }
+s_eab1: R1L        is srcmode=2 & R1L        { export R1L; }
+s_eab1: R1H        is srcmode=3 & R1H        { export R1H; }
+s_eab1: A0         is A0 & srcmode=4         { local temp = (A0:1); export temp; }
+s_eab1: A1         is A1 & srcmode=5         { local temp = (A1:1); export temp; }
+s_eab1: [A0]       is A0 & srcmode=6         { local temp = A0; export *[near]:1 temp; }
+s_eab1: [A1]       is A1 & srcmode=7         { local temp = A1; export *[near]:1 temp; }
+s_eab1: s_addr     is s_addr                 { local temp = s_addr; export *[near]:1 temp; }
+
+# universal operands for one-operand instructions
+d_eaw: d_eaw1      is op8_11 ;  d_eaw1 [ destmode = op8_11; ] { export d_eaw1; }
+d_eab: d_eab1      is op8_11 ;  d_eab1 [ destmode = op8_11; ] { export d_eab1; }
+s_eab: s_eab1      is op12_15 ; s_eab1 [ srcmode = op12_15; ] { export s_eab1; }
 
 
-d_eab: R0L                   is dest8_11=0 & R0L                   { export R0L; }
-d_eab: R0H                   is dest8_11=1 & R0H                   { export R0H; }
-d_eab: R1L                   is dest8_11=2 & R1L                   { export R1L; }
-d_eab: R1H                   is dest8_11=3 & R1H                   { export R1H; }
-d_eab: dest8_11              is dest8_11 & dest8_11=4              { local temp = (dest8_11:1); export temp; }
-d_eab: dest8_11              is dest8_11 & dest8_11=5              { local temp = (dest8_11:1); export temp; }
-d_eab: dest8_11              is dest8_11 & dest8_11=6              { export *[near]:1 dest8_11; }
-d_eab: dest8_11              is dest8_11 & dest8_11=7              { export *[near]:1 dest8_11; }
-d_eab: dest_dsp8[dest8_11]   is dest8_11 & dest8_11=8; dest_dsp8   { local temp:2 = dest8_11 + dest_dsp8; export *[near]:1 temp; }
-d_eab: dest_dsp8[dest8_11]   is dest8_11 & dest8_11=9; dest_dsp8   { local temp:2 = dest8_11 + dest_dsp8; export *[near]:1 temp; }
-d_eab: dest_dsp8[dest8_11]   is dest8_11 & dest8_11=10; dest_dsp8  { local temp:2 = dest8_11 + dest_dsp8; export *[near]:1 temp; }
-d_eab: dest_dsp8[FB]         is FB & dest8_11=11; dest_dsp8        { local temp:2 = FB+sext(dest_dsp8:1); export *[near]:1 temp; } 
-d_eab: dest_dsp16[dest8_11]  is dest8_11 & dest8_11=12; dest_dsp16 { local temp:2 = dest8_11 + dest_dsp16; export *[near]:1 temp; }
-d_eab: dest_dsp16[dest8_11]  is dest8_11 & dest8_11=13; dest_dsp16 { local temp:2 = dest8_11 + dest_dsp16; export *[near]:1 temp; }
-d_eab: dest_dsp16[SB]        is SB & dest8_11=14; dest_dsp16       { local temp:2 = SB + dest_dsp16; export *[near]:1 temp; }
-d_eab: dest_abs16            is dest8_11=15; dest_abs16            { local temp:2 = dest_abs16; export *[near]:1 temp; }
+SRC2: R0L          is src2=0x00 & dest2_2=1 & R0L { export R0L; }
+SRC2: R0H          is src2=0x00 & dest2_2=0 & R0H { export R0H; }
+SRC2: dsp8[SB]     is src2=1 & SB; dsp8           { local temp = (SB + dsp8); export *[near]:1 temp; }
+SRC2: dsp8[FB]     is src2=2  & FB; dsp8          { local temp = FB + sext(dsp8:1); export *[near]:1 temp; }
+SRC2: abs16        is src2=3; abs16               { export *[near]:1 abs16; }
 
-s_eab: R0L              is src12_15=0 & R0L              { export R0L; }
-s_eab: R0H              is src12_15=1 & R0H              { export R0H; }
-s_eab: R1L              is src12_15=2 & R1L              { export R1L; }
-s_eab: R1H              is src12_15=3 & R1H              { export R1H; }
-s_eab: src12_15         is src12_15 & src12_15=4         { local temp = src12_15:1; export temp; }
-s_eab: src12_15         is src12_15 & src12_15=5         { local temp = src12_15:1; export temp; }
-s_eab: src12_15         is src12_15 & src12_15=6         { local temp = src12_15; export *[near]:1 temp; }
-s_eab: src12_15         is src12_15 & src12_15=7         { local temp = src12_15; export *[near]:1 temp; }
-s_eab: dsp8[src12_15]   is src12_15 & src12_15=8; dsp8   { local temp = (src12_15 + dsp8); export *[near]:1 temp; }
-s_eab: dsp8[src12_15]   is src12_15 & src12_15=9; dsp8   { local temp = (src12_15 + dsp8); export *[near]:1 temp; }
-s_eab: dsp8[src12_15]   is src12_15 & src12_15=10; dsp8  { local temp = (src12_15 + dsp8); export *[near]:1 temp; }
-s_eab: dsp8[FB]         is FB &       src12_15=11; dsp8  { local temp = FB + sext(dsp8:1); export *[near]:1 temp; }
-s_eab: dsp16[src12_15]  is src12_15 & src12_15=12; dsp16 { local temp = (src12_15 + dsp16); export *[near]:1 temp; }
-s_eab: dsp16[src12_15]  is src12_15 & src12_15=13; dsp16 { local temp = (src12_15 + dsp16); export *[near]:1 temp; }
-s_eab: dsp16[src12_15]  is src12_15 & src12_15=14; dsp16 { local temp = (src12_15 + dsp16); export *[near]:1 temp; }
-s_eab: abs16            is src12_15=15; abs16            { local temp = (abs16:2); export *[near]:1 temp; }
+d_d_eab: R0H       is R0H & dest0_2=3          { export R0H; }
+d_d_eab: R0L       is R0L & dest0_2=4          { export R0L; }
+d_d_eab: dsp8[SB]  is SB & dest0_2=5;dsp8      { local temp = (SB +dsp8); export *[near]:1 temp; }
+d_d_eab: dsp8[FB]  is FB & dest0_2=6;dsp8      { local temp = FB + sext(dsp8:1); export *[near]:1 temp; }
+d_d_eab: abs16     is dest0_2=7;abs16          { export *[near]:1 abs16; }
 
-SRC2: R0L       is src2=0x00 & dest2_2=1 & R0L { export R0L; }
-SRC2: R0H       is src2=0x00 & dest2_2=0 & R0H { export R0H; }
-SRC2: dsp8[SB]  is src2=1 & SB; dsp8           { local temp = (SB + dsp8); export *[near]:1 temp; }
-SRC2: dsp8[FB]  is src2=2  & FB; dsp8          { local temp = FB + sext(dsp8:1); export *[near]:1 temp; }
-SRC2: abs16     is src2=3; abs16               { export *[near]:1 abs16; }
+d_imm: R0H         is R0H & dest0_2_imm8=3     { export R0H; }
+d_imm: R0L         is R0L & dest0_2_imm8=4     { export R0L; }
+d_imm: dsp8[SB]    is SB & dest0_2_imm8=5;dsp8 { local temp = (SB +dsp8); export *[near]:1 temp; }
+d_imm: dsp8[FB]    is FB & dest0_2_imm8=6;dsp8 { local temp = FB + sext(dsp8:1); export *[near]:1 temp; }
+d_imm: abs16       is dest0_2_imm8=7;abs16     { export *[near]:1 abs16; }
 
-d_d_eab: R0H       is R0H & dest0_2=3     { export R0H; }
-d_d_eab: R0L       is R0L & dest0_2=4     { export R0L; }
-d_d_eab: dsp8[SB]  is SB & dest0_2=5;dsp8 { local temp = (SB +dsp8); export *[near]:1 temp; }
-d_d_eab: dsp8[FB]  is FB & dest0_2=6;dsp8 { local temp = FB + sext(dsp8:1); export *[near]:1 temp; }
-d_d_eab: abs16     is dest0_2=7;abs16     { export *[near]:1 abs16; }
-
-d_imm: R0H       is R0H & dest0_2_imm8=3     { export R0H; }
-d_imm: R0L       is R0L & dest0_2_imm8=4     { export R0L; }
-d_imm: dsp8[SB]  is SB & dest0_2_imm8=5;dsp8 { local temp = (SB +dsp8); export *[near]:1 temp; }
-d_imm: dsp8[FB]  is FB & dest0_2_imm8=6;dsp8 { local temp = FB + sext(dsp8:1); export *[near]:1 temp; }
-d_imm: abs16     is dest0_2_imm8=7;abs16     { export *[near]:1 abs16; }
-
+# EXTS.b operand
 j_n_eaw: [A0]       is A0 & dest8_11=6         { local temp:2 = A0; export temp; }
 j_n_eaw: [A1]       is A1 & dest8_11=7         { local temp:2 = A1; export temp; }
 j_n_eaw: dsp8[A0]   is A0 & dest8_11=8; dsp8   { local temp:2 = A0 + dsp8; export temp; }
@@ -284,17 +253,53 @@ j_n_eaw: dsp16[A1]  is A1 & dest8_11=13; dsp16 { local temp:2 = A1 + dsp16; expo
 j_n_eaw: dsp16[SB]  is SB & dest8_11=14; dsp16 { local temp:2 = SB + dsp16; export temp; } 
 j_n_eaw: abs16      is dest8_11=15; abs16      { local temp:2 = abs16; export temp; }
 
-j_eaw: [A0]       is A0 & dest8_11=6         { local temp:4 = zext(A0); export *:2 temp; }
-j_eaw: [A1]       is A1 & dest8_11=7         { local temp:4 = zext(A1); export *:2 temp; }
-j_eaw: dsp8[A0]   is A0 & dest8_11=8; dsp8   { local temp:4 = zext(A0 + dsp8); export *:2 temp; }
-j_eaw: dsp8[A1]   is A1 & dest8_11=9; dsp8   { local temp:4 = zext(A1 + dsp8); export *:2 temp; } 
-j_eaw: dsp8[SB]   is SB & dest8_11=10; dsp8  { local temp:4 = zext(SB + dsp8); export *:2 temp; } 
-j_eaw: dsp8[FB]   is FB & dest8_11=11 ; dsp8 { local temp:4 = zext(FB+sext(dsp8:1)); export *:2 temp; } 
-j_eaw: dsp20[A0]  is A0 & dest8_11=12; dsp20 { local temp:4 = zext(zext(A0) + dsp20:3); export *:2 temp; } 
-j_eaw: dsp20[A1]  is A1 & dest8_11=13; dsp20 { local temp:4 = zext(zext(A1) + dsp20:3); export *:2 temp; } 
-j_eaw: dsp16[SB]  is SB & dest8_11=14; dsp16 { local temp:4 = zext(SB + dsp16:2); export *:2 temp; } 
-j_eaw: abs16      is dest8_11=15; abs16      { local temp:4 = zext(abs16:2); export *:2 temp; }
+# JMPI.w, JSRI.w, JSRI.a operand
+j_eaw: [A0]         is A0 & dest8_11=6         { local temp:4 = zext(A0); export *:2 temp; }
+j_eaw: [A1]         is A1 & dest8_11=7         { local temp:4 = zext(A1); export *:2 temp; }
+j_eaw: dsp8[A0]     is A0 & dest8_11=8; dsp8   { local temp:4 = zext(A0 + dsp8); export *:2 temp; }
+j_eaw: dsp8[A1]     is A1 & dest8_11=9; dsp8   { local temp:4 = zext(A1 + dsp8); export *:2 temp; }
+j_eaw: dsp8[SB]     is SB & dest8_11=10; dsp8  { local temp:4 = zext(SB + dsp8); export *:2 temp; }
+j_eaw: dsp8[FB]     is FB & dest8_11=11 ; dsp8 { local temp:4 = zext(FB+sext(dsp8:1)); export *:2 temp; }
+j_eaw: dsp20[A0]    is A0 & dest8_11=12; dsp20 { local temp:4 = zext(zext(A0) + dsp20:3); export *:2 temp; }
+j_eaw: dsp20[A1]    is A1 & dest8_11=13; dsp20 { local temp:4 = zext(zext(A1) + dsp20:3); export *:2 temp; }
+j_eaw: dsp16[SB]    is SB & dest8_11=14; dsp16 { local temp:4 = zext(SB + dsp16:2); export *:2 temp; }
+j_eaw: abs16        is dest8_11=15; abs16      { local temp:4 = zext(abs16:2); export *:2 temp; }
 
+# Bit manipulating instructions, byte address
+# R0, R1, R2, R3, A0, A1
+s_bitV: imm8,dest8_11   is dest8_11 & op8_11=0; imm8 & data8_bits47=0 { local addr = &R0 + (imm8 / 8); export *[register]:1 addr; }
+s_bitV: imm8,dest8_11   is dest8_11 & op8_11=1; imm8 & data8_bits47=0 { local addr = &R1 + (imm8 / 8); export *[register]:1 addr; }
+s_bitV: imm8,dest8_11   is dest8_11 & op8_11=2; imm8 & data8_bits47=0 { local addr = &R2 + (imm8 / 8); export *[register]:1 addr; }
+s_bitV: imm8,dest8_11   is dest8_11 & op8_11=3; imm8 & data8_bits47=0 { local addr = &R3 + (imm8 / 8); export *[register]:1 addr; }
+s_bitV: imm8,dest8_11   is dest8_11 & op8_11=4; imm8 & data8_bits47=0 { local addr = &A0 + (imm8 / 8); export *[register]:1 addr; }
+s_bitV: imm8,dest8_11   is dest8_11 & op8_11=5; imm8 & data8_bits47=0 { local addr = &A1 + (imm8 / 8); export *[register]:1 addr; }
+# [A0], [A1]
+s_bitV: [dest8_11]      is dest8_11 & (op8_11=6 | op8_11=7)           { local addr = dest8_11/8; export *[near]:1 addr; }
+# base8[A0], base8[A1]
+s_bitV: imm8[dest8_11]  is dest8_11 & (op8_11=8 | op8_11=9); imm8     { local addr = (dest8_11 + imm8)/8; export *[near]:1 addr; }
+s_bitV: bitNo8, bitBase8[SB] is SB & op8_11=10; bitNo8 & bitBase8     { local addr = SB + bitBase8; export *[near]:1 addr; }
+s_bitV: bitNo8, bitBase8[FB] is FB & op8_11=11; bitNo8 & bitBase8     { local addr = FB + bitBase8; export *[near]:1 addr; }
+# base16[A0], base16[A1]
+s_bitV: imm16[dest8_11] is dest8_11 & (op8_11=12 | op8_11=13); imm16  { local addr = (dest8_11 + imm16)/8; export *[near]:1 addr; }
+s_bitV: bitNo16, bitBase16[SB] is SB & op8_11=14; bitNo16 & bitBase16 { local addr = FB + bitBase16; export *[near]:1 addr; }
+s_bitV: bitNo16, bitBase16     is op8_11=15; bitNo16 & bitBase16      { export *[near]:1 bitBase16; }
+
+# Bit manipulating instructions, bit mask
+# R0, R1, R2, R3, A0, A1
+s_bitB: imm8,dest8_11   is dest8_11 & (op8_11=0 | op8_11=1 | op8_11=2 | op8_11=3 | op8_11=4 | op8_11=5); imm8 & data8_bits47=0 { local mask:1 = 1<<(imm8 & 7); export mask; }
+# [A0], [A1]
+s_bitB: [dest8_11]      is dest8_11 & (op8_11=6 | op8_11=7)           { local mask:1 = 1<<(dest8_11 & 3); export mask; }
+# base8[A0], base8[A1]
+s_bitB: imm8[dest8_11]  is dest8_11 & (op8_11=8 | op8_11=9); imm8     { local mask:1 = 1<<(imm8 & 3); export mask; }
+s_bitB: bitNo8, bitBase8[SB] is SB & op8_11=10; bitNo8 & bitBase8     { local mask:1 = 1<<bitNo8; export mask; }
+s_bitB: bitNo8, bitBase8[FB] is FB & op8_11=11; bitNo8 & bitBase8     { local mask:1 = 1<<bitNo8; export mask; }
+# base16[A0], base16[A1]
+s_bitB: imm16[dest8_11] is dest8_11 & (op8_11=12 | op8_11=13); imm16  { local mask:1 = 1<<(imm16 & 3); export mask; }
+s_bitB: bitNo16, bitBase16[SB] is SB & op8_11=14; bitNo16 & bitBase16 { local mask:1 = 1<<bitNo16; export mask; }
+s_bitB: bitNo16, bitBase16     is op8_11=15; bitNo16 & bitBase16      { local mask:1 = 1<<bitNo16; export mask; }
+
+
+# BMxxx condition
 COND8: "GEU/C"   is cnd8=0x00    { local tmp:1 = Cflg; export tmp; }
 COND8: "GTU"     is cnd8=0x01    { local tmp:1 = (Cflg && !Zflg); export tmp; }
 COND8: "EQ/Z"    is cnd8=0x02    { local tmp:1 = Zflg == 1; export tmp; }
@@ -310,6 +315,7 @@ COND8: "GT"      is cnd8=0xfc    { local tmp:1 = !Zflg && (Oflg == Sflg); export
 COND8: "NO"      is cnd8=0xfd    { local tmp:1 = !Oflg; export tmp; }
 COND8: "LT"      is cnd8=0xfe    { local tmp:1 = (Oflg != Sflg); export tmp; }
 
+# BMxxx, Jxxx condition
 #COND4: "GEU/C"   is cnd8_11=0x00 { local tmp:1 = Cflg; export tmp; }
 #COND4: "GTU"     is cnd8_11=0x01 { local tmp:1 = Cflg==!Zflg; export tmp; }
 #COND4: "EQ/Z"    is cnd8_11=0x02 { local tmp:1 = Zflg; export tmp; }
@@ -325,6 +331,7 @@ COND4: "GT"      is cnd8_11=0x0C { local tmp:1 = !Zflg && (Oflg == Sflg); export
 COND4: "NO"      is cnd8_11=0x0D { local tmp:1 = !Oflg; export tmp; }
 COND4: "LT"      is cnd8_11=0x0E { local tmp:1 = (Oflg != Sflg); export tmp; }
 
+# Jxxx condition
 COND3: "GEU/C"   is cnd0_2=0x00  { local tmp:1 = Cflg; export tmp; }
 COND3: "GTU"     is cnd0_2=0x01  { local tmp:1 = (Cflg && !Zflg); export tmp; }
 COND3: "EQ/Z"    is cnd0_2=0x02  { local tmp:1 = Zflg; export tmp; }
@@ -333,6 +340,7 @@ COND3: "LTU/NC"  is cnd0_2=0x04  { local tmp:1 = !Cflg; export tmp; }
 COND3: "LEU"     is cnd0_2=0x05  { local tmp:1 = (!Cflg || Zflg); export tmp; }
 COND3: "NE/NZ"   is cnd0_2=0x06  { local tmp:1 = !Zflg; export tmp; }
 COND3: "PZ"      is cnd0_2=0x07  { local tmp:1 = !Sflg; export tmp; }
+
 
 macro macro_adc8(src, dest) {
 	local tmp = dest + src + Cflg;
@@ -344,26 +352,33 @@ macro macro_adc8(src, dest) {
 }
 
 macro macro_adc16(src, dest) {
+	local s = src;
+	local d = dest;
 	local c:2 = zext(Cflg);
-	Cflg = carry(dest, src) || carry(src+dest, c);
-	Oflg = scarry(dest, src) || scarry(src+dest, c);
-	dest = src+dest+c;
-	Zflg = (dest == 0);
-	Sflg = (dest s< 0);
+	Cflg = carry(d, src) || carry(s + d, c);
+	Oflg = scarry(d, s) || scarry(s + d, c);
+	d = s + d + c;
+	Zflg = (d == 0);
+	Sflg = (d s< 0);
+	dest = d;
 }
 
 macro macro_add(src, dest) {
-	Cflg = carry(dest, src);
-	Oflg = scarry(dest, src);
-	dest = dest+src;
-	Zflg = (dest == 0);
-	Sflg = (dest s< 0);
+	local s = src;
+	local d = dest;
+	Cflg = carry(d, s);
+	Oflg = scarry(d, s);
+	d = d + s;
+	Zflg = (d == 0);
+	Sflg = (d s< 0);
+	dest = d;
 }
 
 macro macro_and (src, dest) {
-	dest = dest & src;
-	Sflg = (dest s< 0);
-	Zflg = (dest == 0);
+	local tmp = dest & src;
+	Sflg = (tmp s< 0);
+	Zflg = (tmp == 0);
+	dest = tmp;
 }
 
 macro macro_bm(cond, bit, dest) {
@@ -376,29 +391,35 @@ macro macro_bm(cond, bit, dest) {
 }
 
 macro macro_cmp(src, dest) {
-	local tmp = dest - src;
-	Cflg = (dest >= src);
-	Zflg = (dest == src);
+	local s = src;
+	local d = dest;
+	local tmp = d - s;
+	Cflg = (d >= s);
+	Zflg = (d == s);
 	Sflg = (tmp s< 0);
-	Oflg = sborrow(dest, src);
+	Oflg = sborrow(d, s);
+	dest = d;
 }
 
 macro macro_mov(src, dest) {
-	dest = src;
-	Sflg = (dest s< 0);
-	Zflg = (dest == 0);
+	local tmp = src;
+	Sflg = (tmp s< 0);
+	Zflg = (tmp == 0);
+	dest = tmp;
 }
 
 macro macro_not(dest) {
-	dest = ~dest;
-	Sflg = (dest s< 0);
-	Zflg = (dest == 0);
+	local tmp = ~dest;
+	Sflg = (tmp s< 0);
+	Zflg = (tmp == 0);
+	dest = tmp;
 }
 
 macro macro_or(src, dest) {
-	dest = dest | src;
-	Sflg = (dest s< 0);
-	Zflg = (dest == 0);
+	local tmp = dest | src;
+	Sflg = (tmp s< 0);
+	Zflg = (tmp == 0);
+	dest = tmp;
 }
 
 macro macro_sbb8(src, dest) {
@@ -420,63 +441,69 @@ macro macro_sbb16(src, dest) {
 }
 
 macro macro_sub(src, dest) {
-	local tmp = dest - src;
+	local s = src;
+	local d = dest;
+	local tmp = d - s;
 	Cflg = (tmp s>= 0);
 	Zflg = (tmp == 0);
 	Sflg = (tmp s< 0);
-	Oflg = sborrow(dest, src);
+	Oflg = sborrow(d, s);
 	dest = tmp;
 }
 
 @define DEST_IS_An "(dest8_11=4 | dest8_11=5)"
 
-@define SRCDEST8 "op8_11 & op12_15 ; s_eab1 ; d_eab1 [srcmode=op12_15; destmode=op8_11;]"
+@define SRCDEST8  "op8_11 & op12_15 ; s_eab1 ; d_eab1 [srcmode=op12_15; destmode=op8_11;]"
 
 @define SRCDEST16 "op8_11 & op12_15 ; s_eaw1 ; d_eaw1 [srcmode=op12_15; destmode=op8_11;]"
 
-#:ABS.b d_eab           is (op1_7=0x3b & size0=0 & op12_15=0xf) ... & d_eab {
-#}
-#
-#:ABS.w d_eaw           is (op1_7=0x3b & size0=1 & op12_15=0xf) ... & d_eaw {
-#
+u8:  "#"imm8    is imm8  { export *[const]:1 imm8; }
+u16: "#"imm16   is imm16 { export *[const]:2 imm16; }
 
-u8: "#"imm8 is imm8 {
-    export *[const]:1 imm8;
+
+
+:ABS.b d_eab           is (op1_7=0x3b & size0=0 & op12_15=0xf) ... & d_eab {
+	local tmp = d_eab;
+	tmp = (tmp s> 0)*tmp - (tmp s< 0)*tmp;
+	d_eab = tmp;
 }
 
-u16: "#"imm16 is imm16 {
-    export *[const]:2 imm16;
+:ABS.w d_eaw           is (op1_7=0x3b & size0=1 & op12_15=0xf) ... & d_eaw {
+	local tmp = d_eaw;
+	tmp = zext(tmp s> 0)*tmp - zext(tmp s< 0)*tmp;
+	d_eaw = tmp;
 }
+
 
 :ADC.b u8, dest8_11               is op1_7=0x3b & size0=0 & op12_15=0x6 & dest8_11 & $(DEST_IS_An); u8 {
 	macro_adc16(zext(u8:1), dest8_11);
 }
 
-:ADC.b u8 ,d_eab                  is (op1_7=0x3b & size0=0 & op12_15=0x6) ... & d_eab; u8 {
+:ADC.b u8, d_eab                  is (op1_7=0x3b & size0=0 & op12_15=0x6) ... & d_eab; u8 {
 	macro_adc8(u8, d_eab);
 }
 
-:ADC.w u16,d_eaw                 is (op1_7=0x3b & size0=1 & op12_15=0x6) ... & d_eaw; u16 {
+:ADC.w u16, d_eaw                is (op1_7=0x3b & size0=1 & op12_15=0x6) ... & d_eaw; u16 {
 	macro_adc16(u16, d_eaw);
 }
 
-:ADC.b s_eab,dest8_11              is (op1_7=0x58 & size0=0 & dest8_11 & $(DEST_IS_An)) ...& s_eab {
+:ADC.b s_eab, dest8_11           is (op1_7=0x58 & size0=0 & dest8_11 & $(DEST_IS_An)) ...& s_eab {
 	macro_adc16(zext(s_eab), dest8_11);
 }
 
-:ADC.b s_eab1,d_eab1               is op1_7=0x58 & size0=0 & $(SRCDEST8) {
+:ADC.b s_eab1, d_eab1            is op1_7=0x58 & size0=0 & $(SRCDEST8) {
 	macro_adc8(s_eab1, d_eab1);
 }
 
-:ADC.w s_eaw1,d_eaw1               is op1_7=0x58 & size0=1 & $(SRCDEST16) {
+:ADC.w s_eaw1, d_eaw1            is op1_7=0x58 & size0=1 & $(SRCDEST16) {
 	macro_adc16(s_eaw1, d_eaw1);
 }
 
-:ADCF.b d_eab                      is (op1_7=0x3b & size0=0 & op12_15=0xe) ... & d_eab {
+:ADCF.b d_eab                    is (op1_7=0x3b & size0=0 & op12_15=0xe) ... & d_eab {
 	local c:1 = Cflg;
 	macro_add(c, d_eab);
 }
-:ADCF.w d_eaw                      is (op1_7=0x3b & size0=1 & op12_15=0xe) ... & d_eaw {
+:ADCF.w d_eaw                    is (op1_7=0x3b & size0=1 & op12_15=0xe) ... & d_eaw {
 	macro_adc16(0, d_eaw);
 }
 
@@ -492,31 +519,31 @@ u16: "#"imm16 is imm16 {
 	macro_add(u16, d_eaw);
 }
 
-:ADD.b imm12_15, dest8_11          is op1_7=0x64 & size0=0 & imm12_15 & dest8_11 & $(DEST_IS_An) {
+:ADD.b imm12_15, dest8_11        is op1_7=0x64 & size0=0 & imm12_15 & dest8_11 & $(DEST_IS_An) {
 	macro_add(zext(imm12_15:1), dest8_11);
 }
 
-:ADD.b imm12_15, d_eab             is (op1_7=0x64 & size0=0 & imm12_15) ... & d_eab {
+:ADD.b imm12_15, d_eab           is (op1_7=0x64 & size0=0 & imm12_15) ... & d_eab {
 	macro_add(imm12_15, d_eab);
 }
 
-:ADD.w imm12_15, d_eaw             is (op1_7=0x64 & size0=1 & imm12_15) ... & d_eaw {
+:ADD.w imm12_15, d_eaw           is (op1_7=0x64 & size0=1 & imm12_15) ... & d_eaw {
 	macro_add(imm12_15, d_eaw);
 }
 
-:ADD.b imm8_15,d_imm               is (op3_7_imm8=0x10 & imm8_15) ... & d_imm {
+:ADD.b imm8_15, d_imm            is (op3_7_imm8=0x10 & imm8_15) ... & d_imm {
 	macro_add(imm8_15, d_imm);
 }
 
-:ADD.b s_eab1,d_eab1     is op1_7=0x50 & size0=0 & $(SRCDEST8){
+:ADD.b s_eab1, d_eab1            is op1_7=0x50 & size0=0 & $(SRCDEST8){
 	macro_add(s_eab1, d_eab1);	
 }
 
-:ADD.w s_eaw1,d_eaw1               is op1_7=0x50 & size0=1 & $(SRCDEST16) {
+:ADD.w s_eaw1, d_eaw1            is op1_7=0x50 & size0=1 & $(SRCDEST16) {
 	macro_add(s_eaw1, d_eaw1);
 }
 
-:ADD.b SRC2, dest2_2   is (op=0x04 & dest2_2) ... & SRC2 {
+:ADD.b SRC2, dest2_2             is (op=0x04 & dest2_2) ... & SRC2 {
 	macro_add(SRC2, dest2_2);
 }
 
@@ -528,11 +555,11 @@ u16: "#"imm16 is imm16 {
 	macro_add(u16, SP);
 }
 
-:ADD imm8_11,SP                    is op1_7=0x3E & size0 & op12_15=0xb & imm8_11 & SP {
+:ADD imm8_11,SP                  is op1_7=0x3E & size0 & op12_15=0xb & imm8_11 & SP {
 	macro_add(sext(imm8_11:1), SP);
 }
 
-ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
+ADJNZ_DEST: addr                 is dsp8 [addr = dsp8 + (inst_start + 2);] {
 	export *:3 addr;
 }
 
@@ -546,197 +573,134 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 	if(d_eaw != 0) goto ADJNZ_DEST;
 }
 
-:AND.b u8,d_eab                  is (op1_7=0x3b & size0=0 & op12_15=0x2) ... & d_eab; u8 {
+:AND.b u8, d_eab                 is (op1_7=0x3b & size0=0 & op12_15=0x2) ... & d_eab; u8 {
 	macro_and(u8, d_eab);
 }
 
-:AND.w u16,d_eaw                 is (op1_7=0x3b & size0=1 & op12_15=0x2)...& d_eaw; u16 {
+:AND.w u16, d_eaw                is (op1_7=0x3b & size0=1 & op12_15=0x2)...& d_eaw; u16 {
 	macro_and(u16, d_eaw);
 }
 
-:AND.b imm8_15, d_imm              is (op3_7_imm8=0x12 & imm8_15) ... & d_imm {
+:AND.b imm8_15, d_imm            is (op3_7_imm8=0x12 & imm8_15) ... & d_imm {
 	macro_and(imm8_15, d_imm);
 }
 
-:AND.b s_eab1,d_eab1               is op1_7=0x48 & size0=0 & $(SRCDEST8) {
+:AND.b s_eab1, d_eab1            is op1_7=0x48 & size0=0 & $(SRCDEST8) {
 	macro_and(s_eab1, d_eab1);
 }
 
-:AND.w s_eaw1,d_eaw1               is op1_7=0x48 & size0=1 & $(SRCDEST16) {
+:AND.w s_eaw1, d_eaw1            is op1_7=0x48 & size0=1 & $(SRCDEST16) {
 	macro_and(s_eaw1, d_eaw1);
 }
 
-:AND.b SRC2, dest2_2               is (op=0x2 & dest2_2)...& SRC2 {
+:AND.b SRC2, dest2_2             is (op=0x2 & dest2_2)...& SRC2 {
 	macro_and(SRC2, dest2_2);
 }
 
-#:BAND d_eaw            is (op1_7=0x3f &size0=0 & op12_15=0x4) ... & d_eaw {
-#}
-
-:BCLR dsp8, dest8_11               is op1_7=0x3f &size0=0 &op12_15=0x8 & dest8_11 & (dest8_11=0 |dest8_11=1 | dest8_11=2 |dest8_11 =3 |dest8_11=4 |dest8_11=5);dsp8 {
-	dest8_11 = dest8_11&~(1 << zext(dsp8:1));
+:BAND s_bitV                     is (op0_7=0x7E & op12_15=0x4)... & s_bitV & s_bitB {
+	Cflg = Cflg && (s_bitV & s_bitB);
 }
 
-:BCLR bit, addr                    is op1_7=0x3f &size0=0 &op12_15=0x8 & dest8_11 & (dest8_11=6 | dest8_11=7) [addr=dest8_11/8; bit=dest8_11-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2&~(1 << zext(bit:1));
+:BCLR s_bitV                     is (op0_7=0x7E & op12_15=0x8)... & s_bitB & s_bitV {
+	s_bitV = s_bitV & ~s_bitB;
+}
+:BCLR bit0_2, SB[dsp8]           is op=0x8 & bit0_2 & SB; dsp8 {
+	local addr:2 = SB + dsp8;
+	*[near]:1 addr = *[near]:1 addr & ~(1 << bit0_2);
 }
 
-:BCLR bit, addr                    is op1_7=0x3f &size0=0 &op12_15=0x8 & dest8_11 & (dest8_11=8 | dest8_11=9 | dest8_11=10); dsp8 [addr=(dest8_11+dsp8)/8; bit=(dest8_11+dsp8)-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2&~(1 << zext(bit:1));
+:BM^COND8 s_bitV                 is (op0_7=0x7E & op12_15=0x2)... & s_bitV & s_bitB; COND8 {
+	if (COND8) goto <set>;
+		s_bitV = s_bitV & ~s_bitB;
+		goto inst_next;
+	<set>
+		s_bitV = s_bitV | s_bitB;
 }
 
-:BCLR bit, addr[FB]                    is FB & op1_7=0x3f &size0=0 &op12_15=0x8 & dest8_11=11; dsp8 [addr=((8+dsp8)/8)-1; bit=(addr*8)-dsp8;]{
-	local tmp:2 = FB+addr;
-	*[near]:1 tmp = *[near]:1 tmp&~(1 << zext(bit:1));
+:BM^COND4 Cflg                   is op1_7=0x3E & size0=1 & op12_15=0xD & COND4 & Cflg {
+	Cflg = COND4;
 }
 
-:BCLR bit, addr                    is op1_7=0x3f &size0=0 &op12_15=0x8 & dest8_11 & (dest8_11=12 | dest8_11=13 | dest8_11=14); dsp16 [addr=(dest8_11+dsp16)/8; bit=(dest8_11+dsp16)-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2&~(1 << zext(bit:1));
+:BNAND s_bitV                    is (op0_7=0x7E & op12_15=0x5)... & s_bitV & s_bitB {
+	Cflg = Cflg && ((s_bitV & s_bitB) == 0);
 }
 
-:BCLR bit, addr                    is op1_7=0x3f &size0=0 &op12_15=0x8 & dest8_11=15; abs16 [addr=abs16/8; bit=abs16-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2&~(1 << zext(bit:1));
+:BNOR s_bitV                     is (op0_7=0x7E & op12_15=0x7)... & s_bitV & s_bitB {
+	Cflg = Cflg || ((s_bitV & s_bitB) == 0);
 }
 
-#:BCLR bit0_2, SB[dsp8] is op=0x8 & bit0_2 & SB;dsp8 {
-#}
-
-:BM^COND8 dsp8, dest8_11           is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11 = 0 | dest8_11=1 | dest8_11=2 |dest8_11 =3 |dest8_11=4 |dest8_11=5);dsp8; COND8 {
-	macro_bm(COND8:1, dsp8:1, dest8_11);
+:BNOT s_bitV                     is (op0_7=0x7E & op12_15=0xA)... & s_bitV & s_bitB {
+	if (s_bitV & s_bitB) goto <clr>;
+		s_bitV = s_bitV | s_bitB;
+		goto inst_next;
+	<clr>
+		s_bitV = s_bitV & ~s_bitB;
+}
+:BNOT bit0_2, SB[dsp8]           is op=0x0A & bit0_2 & SB; dsp8 {
+	local addr:2 = SB + dsp8;
+	local mask:1 = (1 << bit0_2);
+	local val:1 = *[near]:1 addr;
+	if (val & mask) goto <clr>;
+		*[near]:1 addr = val | mask;
+		goto inst_next;
+	<clr>
+		*[near]:1 addr = val & ~mask;
 }
 
-:BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11=6 | dest8_11=7); COND8 [addr=dest8_11/8; bit=dest8_11-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *[near]:1 addr:2);
+:BNTST s_bitV                    is (op0_7=0x7E & op12_15=0x3)... & s_bitV & s_bitB {
+	local tmp = (s_bitV & s_bitB) == 0;
+	Zflg = tmp;
+	Cflg = tmp;
 }
 
-:BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11=8 | dest8_11=9 | dest8_11=10); dsp8; COND8 [addr=(dest8_11+dsp8)/8; bit=(dest8_11+dsp8)-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *[near]:1 addr:2);
+:BNXOR s_bitV                    is (op0_7=0x7E & op12_15=0xD)... & s_bitV & s_bitB {
+	Cflg = Cflg ^ ((s_bitV & s_bitB) == 0);
 }
 
-:BM^COND8  bit, addr[FB]              is FB & op0_7=0x7E & op12_15=0x2 & dest8_11=11; dsp8; COND8 [addr=((8+dsp8)/8)-1; bit=(addr*8)-dsp8;]{
-	local tmp:2 = FB+addr;
-	macro_bm(COND8:1, bit:1, *[near]:1 tmp);
+:BOR s_bitV                      is (op0_7=0x7E & op12_15=0x6)... & s_bitV & s_bitB {
+	Cflg = Cflg || (s_bitV & s_bitB);
 }
 
-:BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11 & (dest8_11=12 | dest8_11=13 | dest8_11=14); dsp16; COND8 [addr=(dest8_11+dsp16)/8; bit=(dest8_11+dsp16)-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *[near]:1 addr:2);
+:BRK                             is ops0_7=0 {
 }
 
-:BM^COND8 bit, addr                is op1_7=0x3F & size0=0 & op12_15=0x2 & dest8_11=15; abs16; COND8 [addr=abs16/8; bit=abs16-(addr*8);] {
-	macro_bm(COND8:1, bit:1, *[near]:1 addr:2);
+:BSET s_bitV                     is (op0_7=0x7E & op12_15=0x9)... & s_bitB & s_bitV {
+	s_bitV = s_bitV | s_bitB;
+}
+:BSET bit0_2, SB[dsp8]           is op=0x09 & bit0_2 & SB; dsp8 {
+	local addr:2 = SB + dsp8;
+	*[near]:1 addr = *[near]:1 addr | (1 << bit0_2);
 }
 
-##:BM^COND4 "C"          is (op1_7=0x3E & size0=1 &op12_15=0xD) ... & COND4 {
-##}
-#
-#:BNAND d_eaw           is (op1_7=0x3F & size0=0 & op12_15=0x05) ... & d_eaw {
-#}
-#
-#:BNOR d_eaw            is (op1_7=0x3F & size0=0 & op12_15=0x07) ... & d_eaw {
-#}
-#
-#:BNOT d_eaw            is (op1_7=0x3F & size0=0 & op12_15=0x0A) ... & d_eaw {
-#}
-#
-#:BNOT bit0_2, SB[dsp8] is op=0x0A & bit0_2 & SB; dsp8 {
-#}
-#
-#:BNTST d_eaw           is (op1_7=0x3F & size0=0 & op12_15=0x03) ... & d_eaw {
-#}
-#
-#:BNXOR  d_eaw          is (op1_7=0x3F & size0=0 & op12_15=0x0D) ... & d_eaw {
-#}
-#
-#:BOR d_eaw             is (op1_7=0x3F & size0=0 & op12_15=0x06) ... & d_eaw {
-#}
-
-:BRK                               is ops0_7=0 {
+:BTST s_bitV                     is (op0_7=0x7E & op12_15=0xB)... & s_bitV & s_bitB {
+	local tmp = (s_bitV & s_bitB);
+	Cflg = (tmp != 0);
+	Zflg = (tmp == 0);
 }
-
-
-:BSET dsp8, dest8_11               is op1_7=0x3F & size0=0 & op12_15=0x09 & dest8_11 & (dest8_11 = 0 | dest8_11=1 | dest8_11=2 |dest8_11 =3 |dest8_11=4 |dest8_11=5);dsp8 {
-	dest8_11 = dest8_11|(1 << zext(dsp8:1));
-}
-
-:BSET bit, addr                    is op1_7=0x3F & size0=0 & op12_15=0x09 & dest8_11 & (dest8_11=6 | dest8_11=7) [addr=dest8_11/8; bit=dest8_11-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2|(1 << zext(bit:1));
-}
-
-:BSET bit, addr                    is op1_7=0x3F & size0=0 & op12_15=0x09 & dest8_11 & (dest8_11=8 | dest8_11=9 | dest8_11=10); dsp8 [addr=(dest8_11+dsp8)/8; bit=(dest8_11+dsp8)-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2|(1 << zext(bit:1));
-}
-
-:BSET bit, addr[FB]                    is FB & op1_7=0x3F & size0=0 & op12_15=0x09 & dest8_11=11; dsp8 [addr=((8+dsp8)/8)-1; bit=(addr*8)-dsp8;]{
-	local tmp:2 = FB+addr;
-	*[near]:1 tmp = *[near]:1 tmp|(1 << zext(bit:1));
-}
-
-:BSET bit, addr                    is op1_7=0x3F & size0=0 & op12_15=0x09 & dest8_11 & (dest8_11=12 | dest8_11=13 | dest8_11=14); dsp16 [addr=(dest8_11+dsp16)/8; bit=(dest8_11+dsp16)-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2|(1 << zext(bit:1));
-}
-
-:BSET bit, addr                    is op1_7=0x3F & size0=0 & op12_15=0x09 & dest8_11=15; abs16 [addr=abs16/8; bit=abs16-(addr*8);] {
-	*[near]:1 addr:2 = *[near]:1 addr:2|(1 << zext(bit:1));
-}
-
-#:BSET bit0_2, SB[dsp8] is op=0x09 & bit0_2 &SB; dsp8 {
-#}
-
-:BTST dsp8, dest8_11               is op0_7=0x7E & op12_15=0x0B & dest8_11 & (dest8_11=0 |dest8_11=1 | dest8_11=2 |dest8_11 =3 |dest8_11=4 |dest8_11=5);dsp8 {
-	local newv = dest8_11&(1 << zext(dsp8:1));
+:BTST bit0_2, SB[dsp8]           is op=0x0B & bit0_2 & SB; dsp8 {
+	local addr:2 = SB + dsp8;
+	local newv = *[near]:1 addr & (1 << bit0_2);
 	Cflg = (newv != 0);
 	Zflg = (newv == 0);
 }
 
-:BTST bit, addr                    is op0_7=0x7E & op12_15=0x0B & dest8_11 & (dest8_11=6 | dest8_11=7) [addr=dest8_11/8; bit=dest8_11-(addr*8);] {
-	local newv = *[near]:1 addr:2&(1 << zext(bit:1));
-	Cflg = (newv != 0);
-	Zflg = (newv == 0);
+:BTSTC s_bitV                    is (op0_7=0x7E & op12_15=0x0)... & s_bitB & s_bitV {
+	local tmp = (s_bitV & s_bitB);
+	Cflg = (tmp != 0);
+	Zflg = (tmp == 0);
+	s_bitV = s_bitV & ~s_bitB;
 }
 
-:BTST bit, addr                    is op0_7=0x7E & op12_15=0x0B & dest8_11 & (dest8_11=8 | dest8_11=9 | dest8_11=10); dsp8 [addr=(dest8_11+dsp8)/8; bit=(dest8_11+dsp8)-(addr*8);] {
-	local newv = *[near]:1 addr:2&(1 << zext(bit:1));
-	Cflg = (newv != 0);
-	Zflg = (newv == 0);
+:BTSTS s_bitV                    is (op0_7=0x7E & op12_15=0x1)... & s_bitB & s_bitV {
+	local tmp = (s_bitV & s_bitB);
+	Cflg = (tmp != 0);
+	Zflg = (tmp == 0);
+	s_bitV = s_bitV | s_bitB;
 }
 
-:BTST bit, addr[FB]                    is FB & op0_7=0x7E & op12_15=0x0B & dest8_11=11; dsp8 [addr=((8+dsp8)/8)-1; bit=(addr*8)-dsp8;]{
-	local tmp:2 = FB+addr;
-	local newv = *[near]:1 tmp&(1 << zext(bit:1));
-	Cflg = (newv != 0);
-	Zflg = (newv == 0);
+:BXOR s_bitV                     is (op0_7=0x7E & op12_15=0xC)... & s_bitB & s_bitV {
+	Cflg = Cflg ^ ((s_bitV & s_bitB) != 0);
 }
-
-:BTST bit, addr                    is op0_7=0x7E & op12_15=0x0B & dest8_11 & (dest8_11=12 | dest8_11=13); dsp16 [addr=(dest8_11+dsp16)/8; bit=(dest8_11+dsp16)-(addr*8);] {
-	local newv = *[near]:1 addr:2&(1 << zext(bit:1));
-	Cflg = (newv != 0);
-	Zflg = (newv == 0);
-}
-
-:BTST bit, addr                    is op0_7=0x7E & op12_15=0x0B & dest8_11=14; dsp16 [addr=(FB+dsp16)/8; bit=(FB+dsp16)-(addr*8);] {
-	local newv = *[near]:1 addr:2&(1 << zext(bit:1));
-	Cflg = (newv != 0);
-	Zflg = (newv == 0);
-}
-
-
-:BTST bit, addr                    is op0_7=0x7E & op12_15=0x0B & dest8_11=15; abs16 [addr=abs16/8; bit=abs16-(addr*8);] {
-	local newv = *[near]:1 addr:2&(1 << zext(bit:1));
-	Cflg = (newv != 0);
-	Zflg = (newv == 0);
-}
-
-#:BTST bit0_2, SB[dsp8] is op=0x0B & bit0_2 & SB; dsp8 {
-#}
-
-#:BTSTC d_eaw           is (op1_7=0x3F & size0=0 & op12_15=0x00) ...& d_eaw {
-#}
-#
-#:BTSTS d_eaw           is (op1_7=0x3F & size0=0 & op12_15=0x01) ... & d_eaw {
-#}
-#
-#:BXOR d_eaw            is (op1_7=0x3F & size0=0 & op12_15=0x0C) ...& d_eaw {
-#}
 
 :CMP.b u8, d_eab                 is (op1_7=0x3B & size0=0 & op12_15=0x08) ... & d_eab; u8 {
 	macro_cmp(u8, d_eab);
@@ -746,29 +710,27 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 	macro_cmp(u16, d_eaw);
 }
 
-:CMP.b imm12_15, d_eab             is (op1_7=0x68 & size0=0 & imm12_15) ... & d_eab {
+:CMP.b imm12_15, d_eab           is (op1_7=0x68 & size0=0 & imm12_15) ... & d_eab {
 	macro_cmp(imm12_15, d_eab);
 }
 
-
-:CMP.w imm12_15, d_eaw             is (op1_7=0x68 & size0=1 & imm12_15) ... & d_eaw {
+:CMP.w imm12_15, d_eaw           is (op1_7=0x68 & size0=1 & imm12_15) ... & d_eaw {
 	macro_cmp(imm12_15, d_eaw);
 }
-
    
-:CMP.b imm8_15, d_imm              is (op3_7_imm8=0x1C & imm8_15) ... & d_imm {
+:CMP.b imm8_15, d_imm            is (op3_7_imm8=0x1C & imm8_15) ... & d_imm {
 	macro_cmp(imm8_15, d_imm);
 }
 
-:CMP.b s_eab1, d_eab1              is op1_7=0x60 & size0=0 & $(SRCDEST8) {
+:CMP.b s_eab1, d_eab1            is op1_7=0x60 & size0=0 & $(SRCDEST8) {
 	macro_cmp(s_eab1, d_eab1);
 } 
 
-:CMP.w s_eaw1, d_eaw1              is op1_7=0x60 & size0=1 & $(SRCDEST16) {
+:CMP.w s_eaw1, d_eaw1            is op1_7=0x60 & size0=1 & $(SRCDEST16) {
 	macro_cmp(s_eaw1, d_eaw1);
 } 
 
-:CMP.B SRC2, dest2_2               is (op=0x07 & dest2_2) ... & SRC2 {
+:CMP.B SRC2, dest2_2             is (op=0x07 & dest2_2) ... & SRC2 {
 	macro_cmp(SRC2, dest2_2);
 }
 
@@ -796,13 +758,13 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 #:DADD.w R1, R0         is op0_15=0x7DE4 & R1 & R0 {
 #}
 
-:DEC.b d_d_eab                     is op=0x15 ... & d_d_eab {
+:DEC.b d_d_eab                   is op=0x15 ... & d_d_eab {
 	d_d_eab = d_d_eab-1;
 	Sflg = (d_d_eab s< 0);
 	Zflg = (d_d_eab == 0);
 }
 
-:DEC.w dest_a0_a1                  is op4_7=0xF & dest_a0_a1 & bit0_2=0x2 {
+:DEC.w dest_a0_a1                is op4_7=0xF & dest_a0_a1 & bit0_2=0x2 {
 	local tmp:2 = dest_a0_a1 -1;
 	dest_a0_a1 = tmp-1;
 	Sflg = (tmp s< 0);
@@ -810,84 +772,72 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 	dest_a0_a1 = tmp;
 }
 
+macro macro_DIV(dividend, divisor, quotient, remainder, result_max)
+{
+	local q = dividend / sext(divisor);
+	local r = dividend % sext(divisor);
+	Oflg = (divisor == 0) || (q s< (-result_max-1)) || (q s> result_max);
+	quotient = q:2;
+	remainder = r:2;
+}
 :DIV.b u8            is op1_7=0x3e & size0=0 & op8_15=0xe1; u8 {
-	local q = R0 / sext(u8);
-	local r = R0 % sext(u8);
-	Oflg = (u8 == 0);
-	Oflg = (q > 255);
-	R0L = q:2;
-	R0H = r:2;
+	macro_DIV(R0, u8, R0L, R0H, 0x7f);
 }
-
 :DIV.w u16           is op1_7=0x3e & size0=1 & op8_15=0xe1; u16 {
-	local q = R2R0 / sext(u16);
-	local r = R2R0 % sext(u16);
-	Oflg = (u16 == 0);
-	Oflg = (q > 65535);
-	R0 = q:2;
-	R2 = r:2;
+	macro_DIV(R2R0, u16, R0, R2, 0x7fff);
+}
+:DIV.b d_eab         is (op1_7=0x3B & size0=0 & op12_15=0xD) ... & d_eab {
+	macro_DIV(R0, d_eab, R0L, R0H, 0x7f);
+}
+:DIV.w d_eaw         is (op1_7=0x3B & size0=1 & op12_15=0xD) ... & d_eaw {
+	macro_DIV(R2R0, d_eaw, R0, R2, 0x7fff);
 }
 
-:DIV.b d_eab           is (op1_7=0x3B & size0=0 & op12_15=0xD) ... & d_eab {
-	local q = R0 / sext(d_eab);
-	local r = R0 % sext(d_eab);
-	Oflg = (d_eab == 0);
-	Oflg = (q > 255);
-	R0L = q:2;
-	R0H = r:2;
+macro macro_DIVU(dividend, divisor, quotient, remainder, result_max)
+{
+	local q = dividend / zext(divisor);
+	local r = dividend % zext(divisor);
+	Oflg = (divisor == 0) || (q > result_max);
+	quotient = q:2;
+	remainder = r:2;
 }
-
-:DIV.w d_eaw           is (op1_7=0x3B & size0=1 & op12_15=0xD) ... & d_eaw {
-	local q = R2R0 / sext(d_eaw);
-	local r = R2R0 % sext(d_eaw);
-	Oflg = (d_eaw == 0);
-	Oflg = (q > 65535);
-	R0 = q:2;
-	R2 = r:2;
-}
-
 :DIVU.b u8           is op1_7=0x3e & size0=0 & op8_15=0xe0; u8 {
-	local q = R0 / zext(u8);
-	local r = R0 % zext(u8);
-	Oflg = (u8 == 0);
-	Oflg = (q > 255);
-	R0L = q:2;
-	R0H = r:2;
+	macro_DIVU(R0, u8, R0L, R0H, 0xff);
+}
+:DIVU.w u16          is op1_7=0x3e & size0=1 & op8_15=0xe0; u16 {
+	macro_DIVU(R2R0, u16, R0, R2, 0xffff);
+}
+:DIVU.b d_eab        is (op1_7=0x3B & size0=0 & op12_15=0xC) ... & d_eab {
+	macro_DIVU(R0, d_eab, R0L, R0H, 0xff);
+}
+:DIVU.w d_eaw        is (op1_7=0x3B & size0=1 & op12_15=0xC) ... & d_eaw {
+	macro_DIVU(R2R0, d_eaw, R0, R2, 0xffff);
 }
 
-:DIVU.w u16                      is op1_7=0x3e & size0=1 & op8_15=0xe0; u16 {
-	local q = R2R0 / zext(u16);
-	local r = R2R0 % zext(u16);
-	Oflg = (u16 == 0);
-	Oflg = (q > 65535);
-	R0 = q:2;
-	R2 = r:2;
+# FIXME find how to write this difference:
+# DIV:  The remainder has the same sign as the dividend.
+# DIVX: The remainder has the same sign as the divisor.
+macro macro_DIVX(dividend, divisor, quotient, remainder, result_max)
+{
+	local q = dividend / sext(divisor);
+	local r = dividend % sext(divisor);
+	Oflg = (divisor == 0) || (q s< (-result_max-1)) || (q s> result_max);
+	quotient = q:2;
+	remainder = r:2;
+}
+:DIVX.b u8             is op1_7=0x3e & size0=0 & op8_15=0xe3; u8 {
+	macro_DIVX(R0, u8, R0L, R0H, 0x7f);
+}
+:DIVX.w u16            is op1_7=0x3e & size0=1 & op8_15=0xe3; u16 {
+	macro_DIVX(R2R0, u16, R0, R2, 0x7fff);
+}
+:DIVX.b d_eab          is (op1_7=0x3B & size0=0 & op12_15=0x9) ... & d_eab {
+	macro_DIVX(R0, d_eab, R0L, R0H, 0x7f);
+}
+:DIVX.w d_eaw          is (op1_7=0x3B & size0=1 & op12_15=0x9) ... & d_eaw {
+	macro_DIVX(R2R0, d_eaw, R0, R2, 0x7fff);
 }
 
-#:DIVU.b d_eab          is (op1_7=0x3B & size0=0 & op12_15=0xC) ... & d_eab {
-#}
-
-:DIVU.w d_eaw                      is (op1_7=0x3B & size0=1 & op12_15=0xC) ... & d_eaw {
-	local q = R2R0 / zext(d_eaw);
-	local r = R2R0 % zext(d_eaw);
-	Oflg = (d_eaw == 0);
-	Oflg = (q > 65535);
-	R0 = q:2;
-	R2 = r:2;
-}
-
-#:DIVX.b imm8           is op1_7=0x3e & size0=0 & op8_15=0xe3; imm8 {
-#}
-#
-#:DIVX.b imm16          is op1_7=0x3e & size0=1 & op8_15=0xe3; imm16 {
-#}
-#
-#:DIVX.b d_eab          is (op1_7=0x3B & size0=0 & op12_15=0x9) ... & d_eab {
-#}
-#
-#:DIVX.w d_eaw          is (op1_7=0x3B & size0=1 & op12_15=0x9) ... & d_eaw {
-#}
-#
 #:DSBB.b imm8, R0L      is op0_15=0x7CEF & R0L; imm8 {
 #}
 #
@@ -916,7 +866,6 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 	SP = SP -2;
 	*[near]:2 SP = FB:2;
 	FB = SP;
-
 	SP = SP - imm8;
 }
 
@@ -954,8 +903,6 @@ ADJNZ_DEST: addr  is dsp8 [addr = dsp8 + (inst_start + 2);] {
 	R2R0 = sext(R0);
 }
 
-define pcodeop FLAG_CLEAR;
-define pcodeop FLAG_SET;
 define pcodeop INTERRUPTS_ENABLE;
 define pcodeop INTERRUPTS_DISABLE;
 
@@ -970,11 +917,11 @@ define pcodeop INTERRUPTS_DISABLE;
 }
 
 :FCLR flg12_14                     is op0_7=0xEB & op8_11=0x05 & bit15=0 & flg12_14 {
-	FLAG_CLEAR(flg12_14);
+	flg12_14 = 0;
 }
 
 :FSET flg12_14                     is op0_7=0xEB & op8_11=0x04 & bit15=0 & flg12_14 {
-	FLAG_SET(flg12_14);
+	flg12_14 = 1;
 }
 
 
@@ -1000,13 +947,8 @@ define pcodeop INTERRUPT;
 :INTO                              is ops0_7=0xF6 {
 }
 
-dest: addr   is dsp8 [addr = (inst_start+1)+dsp8;] {
-	export *:4 addr;
-}
-
-dest4: addr  is dsp8 [addr = (inst_start+2)+dsp8;] {
-	export *:4 addr;
-}
+dest: addr   is dsp8 [addr = (inst_start+1)+dsp8;] { export *:4 addr; }
+dest4: addr  is dsp8 [addr = (inst_start+2)+dsp8;] { export *:4 addr; }
 
 # TODO: Actually evalulate condition
 :J^COND3 dest                      is op=0x0D & COND3; dest {
@@ -1063,13 +1005,11 @@ dest4: addr  is dsp8 [addr = (inst_start+2)+dsp8;] {
 #}
 
 
-:JSRI.a src32_8_11                 is op0_7=0x7D & op12_15=0x01 & src32_8_11 & (src32_8_11=0 | src32_8_11 = 1 | src32_8_11 =4) {
+:JSRI.a src32_8_11                 is op0_7=0x7D & op12_15=0x01 & src32_8_11 & (src32_8_11=0 | src32_8_11=1 | src32_8_11=4){
 	SP = SP-3;
 	*[near]:3 SP = inst_next;
 	call [src32_8_11];
 }
-
-
 
 :JSRI.a j_eaw                      is (op0_7=0x7D & op12_15=0x01) ...& j_eaw {
 	SP = SP-3;
@@ -1077,33 +1017,24 @@ dest4: addr  is dsp8 [addr = (inst_start+2)+dsp8;] {
 	call [j_eaw];
 }
 
-#:JSRS imm8             is op0_7=0xEF; imm8 {
+#:JSRS imm8                        is op0_7=0xEF; imm8 {
 #}
-##
-#:LDC imm16, "USP"              is op0_7=0xEB & op8_11=0x00 & ldc12_14=5 & bit15=0; imm16 {
+
+#:LDC imm16, "USP"                 is op0_7=0xEB & op8_11=0x00 & ldc12_14=5 & bit15=0; imm16 {
 #	SP = zext(imm16:2);
 ##	SP = zext(USP);
 #}
 
-:LDC u16, FB                     is FB & op0_7=0xEB & op8_11=0x00 & ldc12_14=0x7 & bit15=0; u16 {
-	FB = u16;
-#	SP = zext(USP);
-}
-
-:LDC u16, ldc12_14               is op0_7=0xEB & op8_11=0x00 & ldc12_14 & bit15=0; u16 {
+:LDC u16, ldc12_14                 is op0_7=0xEB & op8_11=0x00 & ldc12_14 & bit15=0; u16 {
 	ldc12_14 = u16;
 #	SP = zext(USP);
-}
-
-:LDC d_eaw, FB                     is (FB & op0_7=0x7A & ldc12_14=0x07 & bit15=1) ... & d_eaw {
-	FB = d_eaw;
 }
 
 :LDC d_eaw, ldc12_14               is (op0_7=0x7A & ldc12_14 & bit15=1) ... & d_eaw {
 	ldc12_14 = d_eaw;
 }
 
-# TODO: Implement this?
+# TODO: Implement LDCTX
 define pcodeop LOAD_CONTEXT;
 
 :LDCTX abs16, abs20                is op0_15=0xF07C; abs16; abs20 {
@@ -1177,49 +1108,49 @@ define pcodeop IPL_LOAD;
 }
 
 
-:MOV.b u8, d_eab                 is (op1_7=0x3A & size0=0 & op12_15=0x0C) ... & d_eab; u8 {
+:MOV.b u8, d_eab                   is (op1_7=0x3A & size0=0 & op12_15=0x0C) ... & d_eab; u8 {
 	macro_mov(u8, d_eab);
 }
 
-:MOV.w u16, d_eaw                is (op1_7=0x3A & size0=1 & op12_15=0x0C) ... & d_eaw; u16 {
+:MOV.w u16, d_eaw                  is (op1_7=0x3A & size0=1 & op12_15=0x0C) ... & d_eaw; u16 {
 	macro_mov(u16, d_eaw);
 }
 
 #Handle zero extending to fill A0/A1 when moving to them
-:MOV.b "#"imm12_15, dest8_11          is op1_7=0x6C & size0=0 & imm12_15 & dest8_11 & $(DEST_IS_An) {
+:MOV.b "#"imm12_15, dest8_11        is op1_7=0x6C & size0=0 & imm12_15 & dest8_11 & $(DEST_IS_An) {
 	macro_mov(zext(imm12_15:1), dest8_11);
 }
 
-:MOV.b "#"imm12_15, d_eab             is (op1_7=0x6C & size0=0 & imm12_15) ... & d_eab {
+:MOV.b "#"imm12_15, d_eab           is (op1_7=0x6C & size0=0 & imm12_15) ... & d_eab {
 	macro_mov(imm12_15, d_eab);
 }
 
-:MOV.w "#"imm12_15, d_eaw             is (op1_7=0x6C & size0=1 & imm12_15) ... & d_eaw {
-	macro_mov(zext(imm12_15:1), d_eaw);
+:MOV.w "#"imm12_15, d_eaw           is (op1_7=0x6C & size0=1 & imm12_15) ... & d_eaw {
+	macro_mov(sext(imm12_15:1), d_eaw);
 }
 
-:MOV.b "#"imm8_15, d_imm              is (op3_7_imm8=0x18 & imm8_15) ... & d_imm {
+:MOV.b "#"imm8_15, d_imm            is (op3_7_imm8=0x18 & imm8_15) ... & d_imm {
 	macro_mov(imm8_15, d_imm);
 }
 
 ## Size is 1 for byte and 0 for word. Opposite of everything else?
-:MOV.b u8, A0                    is A0 & op4_7=0x0E & bit0_2=0x02 & dest_a0_a1=0; u8 {
+:MOV.b u8, A0                       is A0 & op4_7=0x0E & bit0_2=0x02 & dest_a0_a1=0; u8 {
 	macro_mov(zext(u8:1), A0);
 }
 
-:MOV.b u8, A1                    is A1 & op4_7=0x0E & bit0_2=0x02 & dest_a0_a1=1; u8 {
+:MOV.b u8, A1                       is A1 & op4_7=0x0E & bit0_2=0x02 & dest_a0_a1=1; u8 {
 	macro_mov(zext(u8:1), A1);
 }
 
 
 # TODO: Why these need to be seperated I do not know, otherwise they would be fixed by now
 # Size is 1 for byte and 0 for word. Opposite of everything else?
-:MOV.w u16, A0                   is A0 & op4_7=0x0A & dest_a0_a1=0 & bit0_2=0x02; u16 {
+:MOV.w u16, A0                      is A0 & op4_7=0x0A & dest_a0_a1=0 & bit0_2=0x02; u16 {
 	macro_mov(u16, A0);
 }
 
 # Size is 1 for byte and 0 for word. Opposite of everything else?
-:MOV.w u16, A1                   is A1 & op4_7=0x0A & dest_a0_a1=1 & bit0_2=0x02; u16 {
+:MOV.w u16, A1                      is A1 & op4_7=0x0A & dest_a0_a1=1 & bit0_2=0x02; u16 {
 	macro_mov(u16, A1);
 }
 
@@ -1275,12 +1206,16 @@ ZERO: "0"  is epsilon {
 
 :MOV.b d_eab, dsp8[SP]             is (SP & op1_7=0x3A & size0=0 & op12_15=0x03) ... & d_eab; dsp8 {
 	local addr:2 = SP+sext(dsp8:1);
-	macro_mov(d_eab, *[near]:1 addr);
+	local temp:1;
+	macro_mov(d_eab, temp);
+	*[near] addr = temp;
 }
 
 :MOV.w d_eaw, dsp8[SP]             is (SP & op1_7=0x3A & size0=1 & op12_15=0x03) ... & d_eaw; dsp8 {
 	local addr:2 = SP+sext(dsp8:1);
-	macro_mov(d_eaw, *[near]:2 addr);
+	local temp:2;
+	macro_mov(d_eaw, temp);
+	*[near] addr = temp;
 }
 
 MOVA_ADDRESS: dsp8[dest8_11]   is dest8_11 & dest8_11=8; dsp8   { local addr:2 = dest8_11+zext(dsp8:1); export addr; }
@@ -1297,83 +1232,62 @@ MOVA_ADDRESS: abs16            is dest8_11 & dest8_11=15; abs16 { local addr:2 =
 }
 
 :MOVLL R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x00) ... & d_eab {
-	d_eab = (d_eab & 0xF)|(R0L & 0xF);
+	d_eab = (d_eab & 0xF0)|(R0L & 0x0F);
 }
 :MOVLH R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x02) ... & d_eab {
-	d_eab = (d_eab &0xF0)|(R0L << 4);
+	d_eab = (d_eab & 0x0F)|(R0L << 4);
 }
 :MOVHL R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x01) ... & d_eab {
 	d_eab = (d_eab & 0xF0)|(R0L >> 4);
 }
 :MOVHH R0L, d_eab                  is (R0L & op0_7=0x7C & bit15=1 & bit14=0 & dir=0x03) ... & d_eab {
-	d_eab = (d_eab & 0xF0)|(R0L & 0xF0);
+	d_eab = (d_eab & 0x0F)|(R0L & 0xF0);
 }
 
 :MOVLL d_eab, R0L                  is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x00) ... & d_eab {
-	R0L = (R0L & 0xF)|(d_eab & 0xF);
+	R0L = (R0L & 0xF0)|(d_eab & 0x0F);
 }
 :MOVLH d_eab, R0L                  is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x02) ... & d_eab {
-	R0L = (R0L  &0xF0)|(d_eab  << 4);
+	R0L = (R0L & 0x0F)|(d_eab << 4);
 }
 :MOVHL d_eab, R0L                  is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x01) ... & d_eab {
-	R0L = (R0L & 0xF0)|(d_eab  >> 4);
+	R0L = (R0L & 0xF0)|(d_eab >> 4);
 }
-:MOVHH d_eab, R0L                 is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x03) ... & d_eab {
-	R0L = (R0L & 0xF0)|(d_eab  & 0xF0);
-}
-
-#:MUL.b imm8, d_eab     is (op1_7=0x3E & size0=0 & op12_15=0x05) ... & d_eab; imm8 {
-#}
-
-:MUL.b u8, mul8b8_11             is op1_7=0x3E & size0=0 & op12_15=0x05 & dest8_11 & (dest8_11=0|dest8_11=1|dest8_11=2|dest8_11=3) & mul8b8_11; u8 {
-	local tmp:2 = sext(u8:1)*sext(mul8b8_11);
-	dest8_11 = tmp;
+:MOVHH d_eab, R0L                  is (R0L & op0_7=0x7C & bit15=0 & bit14=0 & dir=0x03) ... & d_eab {
+	R0L = (R0L & 0x0F)|(d_eab & 0xF0);
 }
 
-# TODO: Implement everything else other than destination being R2R0 R3R1 A1A0
-:MUL.w u16, dest8_11             is op1_7=0x3E & size0=1 & op12_15=0x05 & (mul8_11=0|mul8_11=1|mul8_11=4) & mul8_11 & dest8_11; u16 {
-	local temp:4 = sext(dest8_11:2)*sext(u16);
-	mul8_11 = temp;
+:MUL.w u16, d_eal1                is op1_7=0x3E & size0=1 & op12_15=0x05 & op8_11; d_eal1 & d_eaw1; u16 [ destmode=op8_11; ]{
+	d_eal1 = sext(d_eaw1) * sext(u16);
 }
-
-#:MUL.b s_eab, d_eab    is op1_7=0x3C & size0=0 & src12_15 & dest8_11; s_eab; d_eab {
-#}
-
-:MUL.w src12_15, dest8_11    is op1_7=0x3C & size0=1 & dest8_11 & src12_15 & (mul8_11=0|mul8_11=1|mul8_11=4) & (src12_15=0|src12_15=1|src12_15=2|src12_15=3|src12_15=4) & mul8_11  {
-	mul8_11 = sext(src12_15)*sext(dest8_11);	
+:MUL.b u8, d_eaw1                 is op1_7=0x3E & size0=0 & op12_15=0x05 & op8_11; d_eaw1 & d_eab1; u8 [ destmode=op8_11; ]{
+	d_eaw1 = sext(d_eab1) * sext(u8);
+}
+:MUL.w s_eaw1, d_eal1             is op1_7=0x3C & size0=1 & op12_15 & op8_11; s_eaw1; d_eal1 & d_eaw1
+	[ destmode=op8_11; srcmode=op12_15; ]{
+	d_eal1 = sext(d_eaw1) * sext(s_eaw1);
+}
+:MUL.b s_eab1, d_eaw1             is op1_7=0x3C & size0=0 & op12_15 & op8_11; s_eab1; d_eaw1 & d_eab1
+	[ destmode=op8_11; srcmode=op12_15; ]{
+	d_eaw1 = sext(d_eab1) * sext(s_eab1);
 }
 
 
-:MULU.b u8, mul8b8_11            is op1_7=0x3E & size0=0 & op12_15=0x04 & dest8_11 & (dest8_11=0|dest8_11=1|dest8_11=2|dest8_11=3) & mul8b8_11; u8 {
-	local tmp:2 = zext(u8:1)*zext(mul8b8_11);
-	dest8_11 = tmp;
+:MULU.w u16, d_eal1               is op1_7=0x3E & size0=1 & op12_15=0x04 & op8_11; d_eal1 & d_eaw1; u16 [ destmode=op8_11; ] {
+	d_eal1 = zext(u16) * zext(d_eaw1);
+}
+:MULU.b u8, d_eaw1                is op1_7=0x3E & size0=0 & op12_15=0x04 & op8_11; d_eaw1 & d_eab1; u8 [ destmode=op8_11; ] {
+	d_eaw1 = zext(u8) * zext(d_eab1);
+}
+:MULU.w s_eaw1, d_eal1            is op1_7=0x38 & size0=1 & op12_15 & op8_11; s_eaw1; d_eal1 & d_eaw1
+	[srcmode=op12_15; destmode=op8_11;] {
+	d_eal1 = zext(s_eaw1) * zext(d_eaw1);
+}
+:MULU.b s_eab1, d_eaw1            is op1_7=0x38 & size0=0 & op12_15 & op8_11; s_eab1; d_eaw1 & d_eab1
+	[srcmode=op12_15; destmode=op8_11;] {
+	d_eaw1 = zext(s_eab1) * zext(d_eab1);
 }
 
-#:MULU.b imm8, dest8_11             is op1_7=0x3E & size0=0 & op12_15=0x04 & dest8_11 & (dest8_11=0|dest8_11=1|dest8_11=2|dest8_11=3|dest8_11=4|dest8_11=5); imm8 {
-#	local tmp:2 = zext(imm8:1)*dest8_11;
-#	dest8_11 = tmp;
-#}
-
-#:MULU.b imm8, d_eab                is (op1_7=0x3E & size0=0 & op12_15=0x04) ... & d_eab; imm8 {
-#}
-
-# TODO: Implement everything else other than destination being R2R0 R3R1 A1A0
-:MULU.w u16, dest8_11            is op1_7=0x3E & size0=1 & op12_15=0x04 & (mul8_11=0|mul8_11=1|mul8_11=4) & mul8_11 & dest8_11; u16 {
-	local temp:4 = zext(dest8_11:2)*zext(u16:2);
-	mul8_11 = temp;
-}
-
-#:MULU.b s_eab1, dest8_11           is (op1_7=0x38 & size0=0 & op8_11 & op12_15 & dest8_11 & $(DEST_IS_An)) ... & s_eab1 [srcmode=op12_15; destmode=op8_11;] {
-#	local tmp:2 = zext(s_eab1:1)*dest8_11;
-#	dest8_11 = tmp;
-#}
-#
-#:MULU.b s_eab1, d_eab1             is op1_7=0x38 & size0=0 & $(SRCDEST8) {
-#}
-
-:MULU.w s_eaw1, d_eaw1             is (op1_7=0x38 & size0=1 & op8_11 & op12_15 & src32_8_11 & (src32_8_11=0 | src32_8_11=1 | src32_8_11=3)); s_eaw1; d_eaw1  [srcmode=op12_15; destmode=op8_11;] {
-	src32_8_11 = zext(d_eaw1)*zext(s_eaw1);
-}
 
 :NEG.b d_eab                       is (op1_7=0x3A & size0=0 & op12_15=0x05) ... & d_eab {
 	Oflg = (d_eab == -128);
@@ -1473,9 +1387,10 @@ MOVA_ADDRESS: abs16            is dest8_11 & dest8_11=15; abs16 { local addr:2 =
 	SP = SP + 2;
 }
 
-
-#:POPC ldc12_14         is op0_7=0xEB & ldc12_14 &  op8_11=0x03 {
-#}
+:POPC ldc12_14         is op0_7=0xEB & ldc12_14 &  op8_11=0x03 {
+	ldc12_14 = *[near]:2 SP;
+	SP = SP + 2;
+}
 
 POPFB: FB is FB & bit15=1 {FB = *[near]:2 SP; SP = SP+2;}
 POPFB:    is bit15=0 {}
@@ -1561,11 +1476,6 @@ _addr: abs16      is op8_11=15; abs16      { local temp:2 = abs16:2; export temp
 	SP = SP-2;
 	*[near]:2 SP = _addr;
 }
-
-:PUSHC FB                          is FB & op0_7=0xEB & op8_11=0x02 & ldc12_14=0x7 & bit15=0 {
-	SP = SP-2;
-	*[near]:2 SP = FB:2;
-} 
 
 :PUSHC FLAG                        is FLAG & op0_7=0xEB & op8_11=0x02 & ldc12_14=0x03 & bit15=0 {
 	SP = SP-2;
@@ -1702,66 +1612,86 @@ PUSHMDISP: PUSHFB PUSHSB PUSHA1 PUSHA0 PUSHR3 PUSHR2 PUSHR1 PUSHR0 is PUSHFB & P
 }
 
 #:SBJNZ
-#:SHA
 
-# TODO C Flag
-:SHA.w sha_imm12_15, d_eaw         is (op1_7=0x78 & size0=1 & sha_imm12_15 &bit15=0) ... & d_eaw {
-	d_eaw = d_eaw << sha_imm12_15;
-	Sflg = (d_eaw s< 0);
-	Zflg = (d_eaw == 0);
+macro macro_SHA_imm(val, shift, msb)
+{
+	local d = val;
+	local c_pos:1 = (shift s> 0) && (((d  << ( shift-1)) & msb) != 0);
+	local c_neg:1 = (shift s< 0) && (((d s>> (-shift-1)) & 1) != 0);
+	d = zext(shift s> 0 )*(d << shift) + zext(shift s< 0)*(d >> (-shift));
+	Sflg = (d s< 0);
+	Zflg = (d == 0);
+	Cflg = c_pos || c_neg;
+	val = d;
+}
+:SHA.w sha_imm12_15, d_eaw         is (op1_7=0x78 & size0=1 & sha_imm12_15) ... & d_eaw {
+	macro_SHA_imm(d_eaw, sha_imm12_15:1, 0x8000);
+}
+:SHA.L shl_imm8_11, dest_SHAL_12   is (op0_7=0xEB & op13_15=0x5 & dest_SHAL_12 & shl_imm8_11) {
+	macro_SHA_imm(dest_SHAL_12, shl_imm8_11:1, 0x80000000);
 }
 
-# TODO C Flag
-:SHA.w sha_imm12_15, d_eaw         is (op1_7=0x78 & size0=1 & sha_imm12_15 &bit15=1) ... & d_eaw {
-	d_eaw = d_eaw s>> sha_imm12_15;
-	Sflg = (d_eaw s< 0);
-	Zflg = (d_eaw == 0);
+macro macro_SHA_R1H(d_eaX, msb)
+{
+	local d = d_eaX;
+	if (R1H s> 0) goto <shiftleft>;
+		Cflg = ((d >> (-R1H-1)) & 0x0001) != 0;
+		d = d s>> (-R1H);
+		goto <done>;
+	<shiftleft>
+		Cflg = ((d << (R1H-1)) & msb) != 0;
+		d = d << R1H;
+	<done>
+	Sflg = (d s< 0);
+	Zflg = (d == 0);
+	d_eaX = d;
+}
+:SHA.w R1H, d_eaw                  is (R1H & op1_7=0x3A & size0=1 & op12_15=0x0F)  ... & d_eaw {
+	macro_SHA_R1H(d_eaw, 0x8000);
+}
+:SHA.b R1H, d_eab                  is (R1H & op1_7=0x3A & size0=0 & op12_15=0x0F)  ... & d_eab {
+	macro_SHA_R1H(d_eab, 0x80);
+}
+:SHA.L R1H, dest_SHAL_12           is (R1H & op0_7=0xEB & op13_15=0x1 & dest_SHAL_12 & op8_11=0xF) {
+	macro_SHA_R1H(dest_SHAL_12, 0x80000000);
 }
 
-# TODO C Flag
+macro macro_SHL(val, shift, msb)
+{
+	local d = val;
+	local c_pos:1 = (shift s> 0) && (((d << ( shift-1)) & msb) != 0);
+	local c_neg:1 = (shift s< 0) && (((d >> (-shift-1)) & 1) != 0);
+	d = zext(shift s> 0)*(d << shift) + zext(shift s< 0)*(d >> (-shift));
+	Sflg = (d s< 0);
+	Zflg = (d == 0);
+	Cflg = c_pos || c_neg;
+	val = d;
+}
 :SHL.b sha_imm12_15, d_eab         is (op1_7=0x74 & size0=0 & sha_imm12_15) ... & d_eab {
-	d_eab = d_eab << sha_imm12_15;
-	Sflg = (d_eab s< 0);
-	Zflg = (d_eab == 0);
+	macro_SHL(d_eab, sha_imm12_15:1, 0x80);
 }
-
-# TODO C Flag
 :SHL.w sha_imm12_15, d_eaw         is (op1_7=0x74 & size0=1 & sha_imm12_15) ... & d_eaw {
-	d_eaw = d_eaw << sha_imm12_15;
-	Sflg = (d_eaw s< 0);
-	Zflg = (d_eaw == 0);
+	macro_SHL(d_eaw, sha_imm12_15:1, 0x8000);
 }
-
-# TODO C Flag
 :SHL.b R1H, d_eab                  is (R1H & op1_7=0x3A & size0=0 & op12_15=0x0E) ... & d_eab {
-	d_eab = d_eab << R1H;
-	Sflg = (d_eab s< 0);
-	Zflg = (d_eab == 0);
+	macro_SHL(d_eab, R1H, 0x80);
 }
-
-# TODO C Flag
 :SHL.w R1H, d_eaw                  is (R1H & op1_7=0x3A & size0=1 & op12_15=0x0E)  ... & d_eaw {
-	d_eaw = d_eaw << R1H;
-	Sflg = (d_eaw s< 0);
-	Zflg = (d_eaw == 0);
+	macro_SHL(d_eaw, R1H, 0x8000);
 }
 
-:SHL.l shl_imm8_11, R2R0           is R2R0 & op0_7=0xEB &  op12_15=0x08 & shl_imm8_11 {
-	R2R0 = R2R0 << shl_imm8_11;
+:SHL.L shl_imm8_11, R2R0           is R2R0 & op0_7=0xEB & op12_15=0x08 & shl_imm8_11 {
+	macro_SHL(R2R0, shl_imm8_11:1, 0x80000000);
 }
-
-:SHL.l shl_imm8_11, R3R1           is R3R1 & op0_7=0xEB & op12_15=0x09 & shl_imm8_11 {
-	R3R1 = R3R1 << shl_imm8_11;
+:SHL.L shl_imm8_11, R3R1           is R3R1 & op0_7=0xEB & op12_15=0x09 & shl_imm8_11 {
+	macro_SHL(R3R1, shl_imm8_11:1, 0x80000000);
 }
-
-:SHL.l R1H, R2R0           is R1H & R2R0 & op0_7=0xEB &  op12_15=0x0 & shl_imm8_11 {
-	R2R0 = R2R0 << R1H;
+:SHL.L R1H, R2R0                   is R1H & R2R0 & op0_7=0xEB &  op12_15=0x0 & shl_imm8_11 {
+	macro_SHL(R2R0, R1H, 0x80000000);
 }
-
-:SHL.l R1H, R3R1           is R1H & R3R1 & op0_7=0xEB & op12_15=0x01 & shl_imm8_11 {
-	R3R1 = R3R1 << R1H;
+:SHL.l R1H, R3R1                   is R1H & R3R1 & op0_7=0xEB & op12_15=0x01 & shl_imm8_11 {
+	macro_SHL(R3R1, R1H, 0x80000000);
 }
-
 
 
 :SMOVF.b                           is op1_7=0x3E & size0=0 & op8_15=0xE8 {
@@ -1822,15 +1752,15 @@ PUSHMDISP: PUSHFB PUSHSB PUSHA1 PUSHA0 PUSHR3 PUSHR2 PUSHR1 PUSHR0 is PUSHFB & P
 	A1 = addr;
 }
 
-:STC FB, d_eaw                     is (FB & op0_7=0x7B & bit15=1 & ldc12_14=0x07) ... & d_eaw {
-	d_eaw = FB:2;
-} 
-
 :STC ldc12_14, d_eaw               is (op0_7=0x7B & bit15=1 & ldc12_14) ... & d_eaw {
 	d_eaw = ldc12_14;
 }
+# FIXME implement destinations other than R2R0, R3R1, A1A0
+:STC "PC", src32_8_11              is (op0_7=0x7C & op12_15=0xC & src32_8_11) {
+	src32_8_11 = inst_start;
+}
 
-# TODO: Implement this?
+# TODO: Implement STCTX
 define pcodeop STORE_CONTEXT;
 
 :STCTX abs16, abs20                is op0_15=0xF07D; abs16; abs20 {
@@ -1908,26 +1838,25 @@ define pcodeop STORE_CONTEXT;
 }
 
 :STZX imm8_15, imm8, d_imm         is (op3_7_imm8=0x1b & imm8_15) ... & d_imm; imm8 {
-	if (Zflg) goto <Ztrue>;
 	if (!Zflg) goto <Zfalse>;
-	<Ztrue>
-	d_imm = imm8_15;
-	goto <end>;
+		# Z = true
+		d_imm = imm8_15;
+		goto <end>;
 	<Zfalse>
-	d_imm = imm8;
+		d_imm = imm8;
 	<end>
 }
 
 
-:SUB.b u8, dest8_11              is op1_7=0x3B & size0=0 & op12_15=0x05 & dest8_11 & $(DEST_IS_An); u8 {
+:SUB.b u8, dest8_11                is op1_7=0x3B & size0=0 & op12_15=0x05 & dest8_11 & $(DEST_IS_An); u8 {
 	macro_sub(zext(u8), dest8_11);
 }
 
-:SUB.b u8, d_eab                 is (op1_7=0x3B & size0=0 & op12_15=0x05) ... & d_eab; u8 {
+:SUB.b u8, d_eab                   is (op1_7=0x3B & size0=0 & op12_15=0x05) ... & d_eab; u8 {
 	macro_sub(u8, d_eab);
 }
 
-:SUB.w u16, d_eaw                is (op1_7=0x3B & size0=1 & op12_15=0x05) ... & d_eaw; u16 {
+:SUB.w u16, d_eaw                  is (op1_7=0x3B & size0=1 & op12_15=0x05) ... & d_eaw; u16 {
 	macro_sub(u16, d_eaw);
 }
 
@@ -1953,7 +1882,7 @@ define pcodeop STORE_CONTEXT;
 	macro_sub(SRC2, dest2_2);
 }
 
-:TST.b u8, dest8_11              is op0_7=0x76 & op12_15=0 & dest8_11 & (dest8_11=4|dest8_11=5); u8 {
+:TST.b u8, dest8_11                is op0_7=0x76 & op12_15=0 & dest8_11 & (dest8_11=4|dest8_11=5); u8 {
 	local tmp = dest8_11 & zext(u8);
 	Sflg = (tmp s< 0);
 	Zflg = (tmp == 0);
@@ -2011,19 +1940,19 @@ define pcodeop STORE_CONTEXT;
 }
 
 
-:XOR.b u8, dest8_11              is op1_7=0x3B & size0=0 & op12_15=0x01 & dest8_11 & $(DEST_IS_An); u8 {
+:XOR.b u8, dest8_11                is op1_7=0x3B & size0=0 & op12_15=0x01 & dest8_11 & $(DEST_IS_An); u8 {
 	dest8_11 = dest8_11 ^ zext(u8:1);
 	Zflg = (dest8_11 == 0);
 	Sflg = (dest8_11 s< 0);
 }
 
-:XOR.b u8, d_eab                 is (op1_7=0x3B & size0=0 & op12_15=0x01) ... & d_eab; u8 {
+:XOR.b u8, d_eab                   is (op1_7=0x3B & size0=0 & op12_15=0x01) ... & d_eab; u8 {
 	d_eab = d_eab ^ u8;
 	Zflg = (d_eab == 0);
 	Sflg = (d_eab s< 0);
 }
 
-:XOR.w u16, d_eaw                is (op1_7=0x3B & size0=1 & op12_15=0x01) ... & d_eaw; u16 {
+:XOR.w u16, d_eaw                  is (op1_7=0x3B & size0=1 & op12_15=0x01) ... & d_eaw; u16 {
 	d_eaw = d_eaw ^ u16;
 	Zflg = (d_eaw == 0);
 	Sflg = (d_eaw s< 0);
